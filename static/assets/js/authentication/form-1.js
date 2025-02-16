@@ -1,3 +1,4 @@
+//Toggle password visibility
 var togglePassword = document.getElementById("toggle-password");
 
 if (togglePassword) {

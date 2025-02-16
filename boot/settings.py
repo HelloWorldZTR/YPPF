@@ -72,6 +72,7 @@ INSTALLED_APPS = [
     "dormitory",
     "feedback",
     "achievement",
+    "wx"
 ]
 
 

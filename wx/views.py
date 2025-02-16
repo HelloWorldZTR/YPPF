@@ -1,21 +1,72 @@
-from typing import cast
-
+from django.shortcuts import render
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework.permissions import AllowAny
 from django.contrib import auth
-from utils.http.dependency import HttpRequest, HttpResponse, UserRequest
+from django.db import transaction
 
+from wx.serializers import LoginSerializer, VerifySerializer
+from wx.config import miniAPP_config as CONFIG
 from generic.models import User
-import utils.models.query as SQ
-from utils.global_messages import succeed
-from utils.health_check import db_connection_healthy
-from utils.views import SecureTemplateView, SecureView
 from app.models import Organization
 from app.utils import update_related_account_in_session
+import utils.models.query as SQ
+from utils.health_check import db_connection_healthy
+from utils.views import SecureView, SecureTemplateView
+from utils.http.dependency import HttpRequest, HttpResponse, UserRequest
+from utils.global_messages import succeed
+from typing import cast
+import requests
 
 
-class Index(SecureTemplateView):
+# Create your views here.
 
+'''
+微信小程序登录
+'''
+class LoginView(APIView):
+    permission_classes = [AllowAny]
+    def post(self, request):
+        serializer = LoginSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=400)
+        code = request.data.get('code')
+        app_id = CONFIG.app_id
+        app_secret = CONFIG.app_secret
+        res = requests.get(f'https://api.weixin.qq.com/sns/jscode2session?appid={app_id}&secret={app_secret}&js_code={code}&grant_type=authorization_code')
+
+        error_code = res.json().get('errcode')
+        error_msg = res.json().get('errmsg')
+        if error_code:
+            return Response({'error_code': error_code, 'error_msg': error_msg}, status=400)
+        else:
+            session_key = res.json().get('session_key')
+            openid = res.json().get('openid')
+            
+            # print('session_key: ', session_key)
+            # print('openid: ', openid)
+            # 存入Session
+            request.session['openid'] = openid
+            request.session['session_key'] = session_key
+            print('Saved to session')
+            # 是否已经绑定
+            user = User.objects.filter(openid=openid).first()
+            if user:
+                return Response({
+                    'openid': openid,
+                    'session_key':session_key
+                },status=200)
+            else:
+                return Response({
+                    'openid': openid,
+                    'session_key': session_key,
+                    'bind': True # 需要绑定
+                }, status=200)
+
+
+class BindView(SecureTemplateView):
     login_required = False
-    template_name = 'index.html'
+    template_name = 'wx/bind.html'
 
     def dispatch_prepare(self, method: str) -> SecureView.HandlerType:
         match method:
@@ -24,7 +75,7 @@ class Index(SecureTemplateView):
                         if self.request.user.is_authenticated else
                         self.visitor_get)
             case 'post':
-                return self.prepare_login()
+                return self.prepare_bind()
             case _:
                 return self.default_prepare(method)
 
@@ -59,10 +110,12 @@ class Index(SecureTemplateView):
         if x_forwarded_for and x_forwarded_for.split(',')[0] == '127.0.0.1':
             self.permission_denied('请使用域名访问')
 
-    def prepare_login(self) -> SecureView.HandlerType:
+    def prepare_bind(self) -> SecureView.HandlerType:
         self.ip_check()
         assert 'username' in self.request.POST
         assert 'password' in self.request.POST
+        assert 'openid' in self.request.session
+
         _user = self.request.user
         assert not _user.is_authenticated or not cast(User, _user).is_valid()
         username = self.request.POST['username']
@@ -75,9 +128,10 @@ class Index(SecureTemplateView):
             username = cast(Organization, org).get_user().username
         self.username = username
         self.password = self.request.POST['password']
-        return self.login        
+        self.openid = self.request.session.get('openid')
+        return self.bind        
 
-    def login(self) -> HttpResponse:
+    def bind(self) -> HttpResponse:
         # Try login
         userinfo = auth.authenticate(username=self.username, password=self.password)
         if userinfo is None:
@@ -88,6 +142,11 @@ class Index(SecureTemplateView):
         self.request = cast(UserRequest, self.request)
         self.valid_user_check(self.request.user)
 
+        # with transaction.atomic():
+        #     user = self.request.user
+        #     user.openid = self.openid
+        #     user.save()
+
         # first time login
         if self.request.user.is_newuser:
             return self.redirect('modpw')
@@ -96,36 +155,9 @@ class Index(SecureTemplateView):
         # When login as np, related org accout is also available
         update_related_account_in_session(self.request, self.username)
 
-        # If origin is present and valid, redirect
-        # Otherwise, redirect to welcome page
-        origin = self.request.GET.get('origin')
-        if origin and self._is_origin_safe(self.request, origin):
-            return self.redirect(origin)
-        else:
-            return self.redirect('welcome')
+        return self.redirect("wxbindcallback")
 
-    def _is_origin_safe(self, request: HttpRequest,
-                        origin: str | None = None) -> bool:
-        return origin is None or origin.startswith('/')
+def wxLogInCallbackView(request: HttpRequest) -> HttpResponse:
+    return render(request, 'wx/callback.html')
 
 
-class Logout(SecureView):
-    login_required = False
-
-    def dispatch_prepare(self, method: str) -> SecureView.HandlerType:
-        return self.get
-
-    def get(self) -> HttpResponse:
-        auth.logout(self.request)
-        return self.redirect('index')
-
-
-def healthcheck(request: HttpRequest) -> HttpResponse:
-    '''
-    django健康状态检查
-    尝试执行数据库操作，若成功返回200，不成功返回500
-    '''
-    if db_connection_healthy():
-        return HttpResponse('healthy', status=200)
-    else:
-        return HttpResponse('unhealthy', status=500)

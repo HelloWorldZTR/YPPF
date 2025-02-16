@@ -315,6 +315,7 @@ class User(AbstractUser, PointMixin, metaclass=UserBase):
 
     Attributes:
     - id: 用户主键
+    - openid: 微信openid
     - username: 用户名，学号
     - name: 用户名称
     - utype: 用户类型，参考User.Type
@@ -324,7 +325,7 @@ class User(AbstractUser, PointMixin, metaclass=UserBase):
     - :class:`UserManager`
     - :class:`django.contrib.auth.models.AbstractUser`
     '''
-
+    openid = models.CharField('微信openid', max_length=100, default='', blank=True)
     class Meta:
         verbose_name = '用户'
         verbose_name_plural = verbose_name
