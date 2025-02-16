@@ -206,6 +206,34 @@ var App = function() {
 
     }
 
+    function _checkMiniProgram(){//TODO:Correct this function
+        var useragent = navigator.userAgent;
+        if(useragent.indexOf('miniprogram') > -1){
+            return true;
+        }
+        else{
+            return false;
+        }
+    }
+
+    function _disableSiderbar(){//TODO:
+        var disabled = [
+            Selector.mainHeader,
+            Selector.sidebar,
+            Selector.sidebarContent,
+            Selector.sidebarStickyContent,
+            '.header-container',
+            '.sub-header-container',
+        ]
+        for(var i = 0; i < disabled.length; i++){
+            var element = document.querySelector(disabled[i]);
+            if(element){
+                //Remove element from parent node
+                element.parentNode.removeChild(element);
+            }
+        }
+    }
+
     return {
         init: function() {
             toggleFunction.overlay();
@@ -232,6 +260,10 @@ var App = function() {
             inBuiltfunctionality.mainCatActivateScroll();
             inBuiltfunctionality.preventScrollBody();
             inBuiltfunctionality.functionalDropdown();
+
+            if(_checkMiniProgram()){
+                _disableSiderbar();
+            }
         }
     }
 

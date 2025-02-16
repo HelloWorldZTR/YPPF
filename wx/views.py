@@ -4,6 +4,9 @@ from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny
 from django.contrib import auth
 from django.db import transaction
+from urllib.parse import quote
+from django.urls import reverse
+import secrets
 
 from wx.serializers import LoginSerializer, VerifySerializer
 from wx.config import miniAPP_config as CONFIG
@@ -48,13 +51,14 @@ class LoginView(APIView):
             # 存入Session
             request.session['openid'] = openid
             request.session['session_key'] = session_key
-            print('Saved to session')
+
             # 是否已经绑定
             user = User.objects.filter(openid=openid).first()
             if user:
                 return Response({
                     'openid': openid,
-                    'session_key':session_key
+                    'session_key':session_key,
+                    'bind': False # 不需要绑定
                 },status=200)
             else:
                 return Response({
@@ -80,22 +84,22 @@ class BindView(SecureTemplateView):
                 return self.default_prepare(method)
 
     def visitor_get(self) -> HttpResponse:
-        # Modify password
-        # Seems that after modification, log out by default?
-        if self.request.GET.get('modinfo') is not None:
-            succeed("修改密码成功!", self.extra_context)
+        assert 'openid' in self.request.GET, "无法获取openid"
         return self.render()
 
     def user_get(self) -> HttpResponse:
+        assert 'openid' in self.request.GET, "无法获取openid"
+        # 直接绑定
         self.request = cast(UserRequest, self.request)
         # Special user
         self.valid_user_check(self.request.user)
 
-        # Logout
-        if self.request.GET.get('is_logout') is not None:
-            return self.redirect('logout')
+        with transaction.atomic():
+            user = self.request.user
+            user.openid = self.request.GET['openid']
+            user.save()
 
-        return self.redirect('welcome')
+        return self.redirect('wxBindCallback')
 
     def valid_user_check(self, user: User):
         # Special user
@@ -114,7 +118,6 @@ class BindView(SecureTemplateView):
         self.ip_check()
         assert 'username' in self.request.POST
         assert 'password' in self.request.POST
-        assert 'openid' in self.request.session
 
         _user = self.request.user
         assert not _user.is_authenticated or not cast(User, _user).is_valid()
@@ -128,7 +131,6 @@ class BindView(SecureTemplateView):
             username = cast(Organization, org).get_user().username
         self.username = username
         self.password = self.request.POST['password']
-        self.openid = self.request.session.get('openid')
         return self.bind        
 
     def bind(self) -> HttpResponse:
@@ -142,10 +144,11 @@ class BindView(SecureTemplateView):
         self.request = cast(UserRequest, self.request)
         self.valid_user_check(self.request.user)
 
-        # with transaction.atomic():
-        #     user = self.request.user
-        #     user.openid = self.openid
-        #     user.save()
+        with transaction.atomic():
+            user = self.request.user
+            user.openid = self.request.GET['openid']
+            user.save()
+
 
         # first time login
         if self.request.user.is_newuser:
@@ -155,9 +158,31 @@ class BindView(SecureTemplateView):
         # When login as np, related org accout is also available
         update_related_account_in_session(self.request, self.username)
 
-        return self.redirect("wxbindcallback")
+        return self.redirect("wxBindCallback")
 
 def wxLogInCallbackView(request: HttpRequest) -> HttpResponse:
     return render(request, 'wx/callback.html')
 
+"""
+网页微信登录
+(Not implemented)
+"""
 
+def webLoginView(request):
+    appid = CONFIG.app_id
+    redirect_uri = quote(reverse('webLoginCallback'))
+    state = secrets.token_urlsafe(16)
+    request.session['state'] = state
+    return render(request, 'wx/weblogin.html', {
+        'appid': appid,
+        'redirect_uri': redirect_uri,
+        'state': state
+    })
+
+def webLoginCallback(request):
+    code = request.GET.get('code')
+    state = request.GET.get('state')
+    if state != request.session.get('state'):
+        return render(request, 'wx/callback.html', {
+            'error': 'state不匹配'
+        })

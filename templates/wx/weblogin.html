@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="zh">
+    {% load static %}
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport"
+              content="width=device-width, initial-scale=1, maximum-scale=1, shrink-to-fit=no">
+        <title>绑定用户 | 元培成长档案</title>
+        <link type="image/x-icon"
+              href="{% static '/assets/img/yp_favicon.png' %}"
+              rel="icon">
+        <!-- BEGIN GLOBAL MANDATORY STYLES -->
+        <!-- <link href="fonts.googleapis.com/css?family=Nunito:400,600,700"
+       rel="stylesheet"> -->
+        <link href="{% static "outer/fonts.googleapis.com/source1.css" %}"
+              rel="stylesheet">
+        <link href="{% static "bootstrap/css/bootstrap.min.css" %}"
+              rel="stylesheet"
+              type="text/css" />
+        <link href="{% static "assets/css/plugins.css" %}"
+              rel="stylesheet"
+              type="text/css" />
+        <link href="{% static "assets/css/authentication/form-1.css" %}"
+              rel="stylesheet"
+              type="text/css" />
+        <!-- END GLOBAL MANDATORY STYLES -->
+        <link rel="stylesheet"
+              type="text/css"
+              href="{% static "assets/css/forms/theme-checkbox-radio.css" %}">
+        <link rel="stylesheet"
+              type="text/css"
+              href="{% static "assets/css/forms/switches.css" %}">
+    </head>
+    {% if load_alert_message %}<script>alert('{{load_alert_message}}');</script>{% endif %}
+    <body class="form ">
+        <div class="form-container ">
+            <div class="form-form"
+                 style="background-image: url(/static/assets/img/YPIC_blur.png);
+                        background-repeat: no-repeat;
+                        background-position: center">
+                <div style="backdrop-filter: blur(10px) grayscale(100%);">
+                    <div class="form-form-wrap">
+                        <div class="form-container">
+                            <div class="form-content">
+                                <div id="qr-code"></div>
+                                <p class="terms-conditions" align='center'>
+                                    © Yuanpei Intelligence Campus <a href="">All Rights
+                                    Reserved</a>.
+                                    <a href="/index/">Yuanpei Profile</a> is a product of Yuanpei College.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="form-image">
+                <div class="l-image">
+                    <div id="style1"
+                         class="carousel slide style-custom-1 h-100"
+                         data-ride="carousel">
+                        <div class="carousel-inner h-100">
+                            <div class="h-100 carousel-item active">
+                                <img src="/static/assets/img/ypbg1-square.jpeg"
+                                     class="w-100 h-100"
+                                     style="object-fit: cover">
+                            </div>
+                            <div class="h-100 carousel-item">
+                                <img src="/static/assets/img/ypbg2-square.jpeg"
+                                     class="w-100 h-100"
+                                     style="object-fit: cover">
+                            </div>
+                            <div class="h-100 carousel-item">
+                                <img src="/static/assets/img/ypbg3-square.jpeg"
+                                     class="w-100 h-100"
+                                     style="object-fit: cover">
+                            </div>
+                        </div>
+                        <a class="carousel-control-prev"
+                           href="#style1"
+                           role="button"
+                           data-slide="prev">
+                            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                            <span class="sr-only">Previous</span>
+                        </a>
+                        <a class="carousel-control-next"
+                           href="#style1"
+                           role="button"
+                           data-slide="next">
+                            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                            <span class="sr-only">Next</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- BEGIN GLOBAL MANDATORY SCRIPTS -->
+        <script src={% static "assets/js/libs/jquery-3.1.1.min.js" %}></script>
+        <script src={% static "bootstrap/js/popper.min.js" %}></script>
+        <script src={% static "bootstrap/js/bootstrap.min.js" %}></script>
+        <!-- END GLOBAL MANDATORY SCRIPTS -->
+        <script src={% static "assets/js/authentication/form-1.js" %}></script>
+        <script src="https://res.wx.qq.com/connect/zh_CN/htmledition/js/wxLogin.js"></script>
+        <script>
+        var obj = new WxLogin({
+            self_redirect: false,
+            id: "qr-code",
+            appid: "{{ appid }}",
+            scope: "snsapi_login",
+            redirect_uri: "{{ redirect_uri }}",
+            state: "{{ state }}",
+            style: "",
+            href: ""
+        });
+        </script>
+    </body>
+</html>
