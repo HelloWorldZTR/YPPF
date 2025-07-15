@@ -196,7 +196,7 @@ def create_appoint(
 def cancel_appoint(appoint: Appoint, record: bool = True, lock: bool = True):
     '''原子化取消预约，不加锁时使用原对象'''
     if lock:
-        appoint = Appoint.objects.select_for_update().get(pk=appoint.pk)
+        appoint = Appoint.objects.order_by('Astart', 'Afinish').select_for_update().get(pk=appoint.pk)
     appoint.Astatus = Appoint.Status.CANCELED
     appoint.save()
     cancel_scheduler(appoint, record_miss=record)
