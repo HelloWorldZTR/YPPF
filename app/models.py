@@ -1992,6 +1992,7 @@ class ReviewCategories(models.Model): # 用于测评的课程列表，由于课�
         verbose_name = "4.测评课程列表"
         verbose_name_plural = verbose_name
         ordering = ["course_name"]
+    id = models.AutoField(primary_key=True)
 
     course_name = models.CharField("课程名称", max_length=60, unique=True)
     course_type = models.SmallIntegerField("课程类型", choices=Course.CourseType.choices, blank=False)
@@ -2010,11 +2011,12 @@ class CourseReview(models.Model):
     time = models.DateTimeField("评论时间", auto_now_add=True)
     reviewer = models.ForeignKey(
         User, on_delete=models.CASCADE, verbose_name="评论者")
-    
-    semester = [models.SmallIntegerField("学年", default=current_year),
-                models.CharField("学期", choices=Semester.choices,
+    teacher = models.CharField("授课教师", max_length=48, default="", blank=True)
+
+    school_year = models.SmallIntegerField("学年", default=current_year)
+    semester = models.CharField("学期", choices=Semester.choices,
                                  max_length=15,
-                                 default=current_semester)]
+                                 default=current_semester)
 
     class Rating(models.IntegerChoices):
         ONE = (1, "1分")
@@ -2022,16 +2024,16 @@ class CourseReview(models.Model):
         THREE = (3, "3分")
         FOUR = (4, "4分")
         FIVE = (5, "5分")
-    ratings = [
-        models.SmallIntegerField("总体评价", choices=Rating.choices, default=Rating.FIVE),
-        models.SmallIntegerField("内容质量", choices=Rating.choices, default=Rating.FIVE),
-        models.SmallIntegerField("工作量", choices=Rating.choices, default=Rating.FIVE),
-        models.SmallIntegerField("考核", choices=Rating.choices, default=Rating.FIVE),
-    ]
+    rating_recommend=models.SmallIntegerField("总体评价", choices=Rating.choices, default=Rating.FIVE)
+    rating_content=models.SmallIntegerField("内容质量", choices=Rating.choices, default=Rating.FIVE)
+    rating_workload=models.SmallIntegerField("工作量", choices=Rating.choices, default=Rating.FIVE)
+    rating_grade=models.SmallIntegerField("考核", choices=Rating.choices, default=Rating.FIVE)
 
     title = models.CharField("测评标题", max_length=100, blank=False)
     text = models.TextField("详细评价", default="", blank=False)
 
     anonymous_flag = models.BooleanField("是否匿名", default=False)
     likes = models.IntegerField("点赞数", default=0)
+    dislikes = models.IntegerField("点踩数", default=0)
     liked_users = models.ManyToManyField(User, related_name="liked_reviews", blank=True)
+    # like 和 dislike 的人都用liked_users来存储

@@ -1,0 +1,528 @@
+{% extends "base.html" %}
+{% block mainpage %}
+<!--  BEGIN CONTENT AREA  -->
+<div id="content" class="main-content pb-3" style="overflow: hidden;">
+  {% if html_display.warn_code == 2 %}
+  <div class="alert alert-success text-center mb-0">{{ html_display.warn_message }}</div>
+  {% elif html_display.warn_code == 1 %}
+  <div class="alert alert-warning text-center mb-0">{{ html_display.warn_message }}</div>
+  {% endif %}
+  <div class="container py-4" id="course-eval-app">
+    <div class="row g-4">
+      <!-- 左侧综述 -->
+      <div class="col-12 col-lg-4">
+        <div class="card h-100">
+          <div class="card-header">
+            <h5 class="mb-0">课程评价综述</h5>
+          </div>
+          <div class="card-body p-2">
+            <!-- 分类折叠/列表 -->
+            <div class="accordion" id="categoryAccordion">
+              <!-- Category Template (repeat) -->
+              <!-- 德 -->
+              <div class="card">
+                <div class="card-header p-0" id="heading-de">
+                  <h2 class="mb-0">
+                    <button class="btn btn-link py-2 w-100 text-left collapsed" type="button" data-toggle="collapse"
+                      data-target="#collapse-de" aria-expanded="false" aria-controls="collapse-de">德（品德发展）</button>
+                  </h2>
+                </div>
+                <div id="collapse-de" class="collapse show" aria-labelledby="heading-de"
+                  data-parent="#categoryAccordion">
+                  <div class="card-body p-2">
+                    <ul class="list-group list-group-flush small" data-category="德">
+                      <!-- JS 注入课程 -->
+                    </ul>
+                  </div>
+                </div>
+              </div>
+              <!-- 智 -->
+              <div class="card">
+                <div class="card-header p-0" id="heading-zhi">
+                  <h2 class="mb-0">
+                    <button class="btn btn-link py-2 w-100 text-left collapsed" type="button" data-toggle="collapse"
+                      data-target="#collapse-zhi" aria-expanded="false" aria-controls="collapse-zhi">智（知识能力）</button>
+                  </h2>
+                </div>
+                <div id="collapse-zhi" class="collapse" aria-labelledby="heading-zhi" data-parent="#categoryAccordion">
+                  <div class="card-body p-2">
+                    <ul class="list-group list-group-flush small" data-category="智">
+                    </ul>
+                  </div>
+                </div>
+              </div>
+              <!-- 体 -->
+              <div class="card">
+                <div class="card-header p-0" id="heading-ti">
+                  <h2 class="mb-0">
+                    <button class="btn btn-link py-2 w-100 text-left collapsed" type="button" data-toggle="collapse"
+                      data-target="#collapse-ti" aria-expanded="false" aria-controls="collapse-ti">体（体育健康）</button>
+                  </h2>
+                </div>
+                <div id="collapse-ti" class="collapse" aria-labelledby="heading-ti" data-parent="#categoryAccordion">
+                  <div class="card-body p-2">
+                    <ul class="list-group list-group-flush small" data-category="体">
+                    </ul>
+                  </div>
+                </div>
+              </div>
+              <!-- 美 -->
+              <div class="card">
+                <div class="card-header p-0" id="heading-mei">
+                  <h2 class="mb-0">
+                    <button class="btn btn-link py-2 w-100 text-left collapsed" type="button" data-toggle="collapse"
+                      data-target="#collapse-mei" aria-expanded="false" aria-controls="collapse-mei">美（审美艺术）</button>
+                  </h2>
+                </div>
+                <div id="collapse-mei" class="collapse" aria-labelledby="heading-mei" data-parent="#categoryAccordion">
+                  <div class="card-body p-2">
+                    <ul class="list-group list-group-flush small" data-category="美">
+                    </ul>
+                  </div>
+                </div>
+              </div>
+              <!-- 劳 -->
+              <div class="card">
+                <div class="card-header p-0" id="heading-lao">
+                  <h2 class="mb-0">
+                    <button class="btn btn-link py-2 w-100 text-left collapsed" type="button" data-toggle="collapse"
+                      data-target="#collapse-lao" aria-expanded="false" aria-controls="collapse-lao">劳（劳动实践）</button>
+                  </h2>
+                </div>
+                <div id="collapse-lao" class="collapse" aria-labelledby="heading-lao" data-parent="#categoryAccordion">
+                  <div class="card-body p-2">
+                    <ul class="list-group list-group-flush small" data-category="劳">
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="card-footer text-muted small">点击课程查看详情</div>
+        </div>
+      </div>
+      <!-- 右侧详情 -->
+      <div class="col-12 col-lg-8">
+        <div class="card h-100">
+          <div class="card-header d-flex align-items-center justify-content-between">
+            <h5 class="mb-0" id="detail-title">请选择课程</h5>
+            <span class="badge badge-primary" id="detail-category"></span>
+          </div>
+          <div class="card-body">
+            <div id="detail-placeholder" class="text-muted">在左侧选择一个课程以查看评价详情。</div>
+            <div id="detail-content" class="d-none">
+              <!-- 评分总概览 -->
+              <div class="mb-4">
+                <h6 class="font-weight-bold mb-3">评分总概览</h6>
+                <!-- 全部学期平均值 -->
+                <div class="mb-3">
+                  <h6 class="text-muted mb-2">全部学期平均</h6>
+                  <div class="row">
+                    <div class="col-6 col-lg-3 mb-3">
+                      <div class="text-center p-2 border rounded bg-light">
+                        <div class="small text-muted mb-1">推荐指数</div>
+                        <div class="h5 mb-2 text-success font-weight-bold" id="overall-recommend-text">0.0</div>
+                        <div class="progress mx-auto" style="height: 6px; width: 80%;">
+                          <div class="progress-bar bg-success" id="overall-recommend" role="progressbar"
+                            style="width: 0%"></div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-6 col-lg-3 mb-3">
+                      <div class="text-center p-2 border rounded bg-light">
+                        <div class="small text-muted mb-1">内容质量</div>
+                        <div class="h5 mb-2 text-info font-weight-bold" id="overall-content-text">0.0</div>
+                        <div class="progress mx-auto" style="height: 6px; width: 80%;">
+                          <div class="progress-bar bg-info" id="overall-content" role="progressbar" style="width: 0%">
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-6 col-lg-3 mb-3">
+                      <div class="text-center p-2 border rounded bg-light">
+                        <div class="small text-muted mb-1">工作量</div>
+                        <div class="h5 mb-2 text-warning font-weight-bold" id="overall-workload-text">0.0</div>
+                        <div class="progress mx-auto" style="height: 6px; width: 80%;">
+                          <div class="progress-bar bg-warning" id="overall-workload" role="progressbar"
+                            style="width: 0%"></div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-6 col-lg-3 mb-3">
+                      <div class="text-center p-2 border rounded bg-light">
+                        <div class="small text-muted mb-1">成绩</div>
+                        <div class="h5 mb-2 text-primary font-weight-bold" id="overall-grade-text">0.0</div>
+                        <div class="progress mx-auto" style="height: 6px; width: 80%;">
+                          <div class="progress-bar bg-primary" id="overall-grade" role="progressbar" style="width: 0%">
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <!-- 各学期平均值 -->
+                <div id="semester-averages">
+                  <h6 class="text-muted mb-2">各学期平均</h6>
+                  <div class="row" id="semester-list">
+                    <!-- 动态生成学期数据 -->
+                  </div>
+                </div>
+              </div>
+              <hr>
+              <!-- 用户评价列表 -->
+              <div>
+                <h6 class="font-weight-bold mb-3">用户评价</h6>
+                <div id="reviews-list">
+                  <!-- 动态生成评价列表 -->
+                </div>
+                <nav aria-label="评价分页" class="mt-3">
+                  <ul class="pagination justify-content-center" id="pagination-container">
+                    <!-- Pagination will be dynamically generated -->
+                  </ul>
+                </nav>
+              </div>
+            </div>
+          </div>
+          <div class="card-footer small text-muted">请注意文明上网，理性发言</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<!--  END CONTENT AREA  -->
+<script>
+  /* 假数据 */
+  const DATA = {{ json_data|safe }};
+
+  const courseIndex = {};
+  DATA.forEach(cat => {
+    const ul = document.querySelector(`ul[data-category="${cat.category}"]`);
+    cat.courses.forEach(c => {
+      courseIndex[c.id] = { ...c, category: cat.category };
+      const li = document.createElement('li');
+      li.className = 'list-group-item d-flex justify-content-between align-items-center list-select-course';
+      li.dataset.courseId = c.id;
+      li.innerHTML = `<span class="course-name text-truncate" style="max-width:70%">${c.name}</span>
+      <span class="badge badge-pill badge-secondary">${c.review_count}</span>`;
+      li.style.cursor = 'pointer';
+      li.addEventListener('click', () => selectCourse(c.id));
+      ul.appendChild(li);
+    });
+  });
+
+  const detailContent = document.getElementById('detail-content');
+  const placeholder = document.getElementById('detail-placeholder');
+
+  function selectCourse(id) {
+    const data = courseIndex[id];
+    if (!data) return;
+
+    // 更新active样式
+    document.querySelectorAll('.list-select-course.active').forEach(el => el.classList.remove('active', 'bg-primary', 'text-white'));
+    const current = document.querySelector(`.list-select-course[data-course-id="${id}"]`);
+    if (current) {
+      current.classList.add('active', 'bg-primary', 'text-white');
+    }
+
+    placeholder.classList.add('d-none');
+    detailContent.classList.remove('d-none');
+    document.getElementById('detail-title').textContent = data.name;
+    document.getElementById('detail-category').textContent = data.category;
+
+    // GET getCourseInfo 接口获取数据
+    const details = $.ajax({
+      url: "{% url 'getCourseInfo' %}",
+      method: "GET",
+      data: { id: id },
+      dataType: "json",
+      async: false
+    }).responseJSON;
+    if (details.error) {
+      console.error(details.error);
+      return;
+    }
+
+    updateOverallScores(details.overall);
+    updateSemesterScores(details.semesters);
+
+    currentPage = -1;
+    totalPages = details.total_pages;
+    initPagination(); // Initialize and load first review page
+  }
+
+  function updateOverallScores(overall) {
+    const metrics = ['recommend', 'content', 'workload', 'grade'];
+    metrics.forEach(metric => {
+      const score = overall[metric];
+      const percentage = (score / 5) * 100;
+      document.getElementById(`overall-${metric}`).style.width = `${percentage}%`;
+      document.getElementById(`overall-${metric}-text`).textContent = score.toFixed(1);
+    });
+  }
+
+  function updateSemesterScores(semesters) {
+    const semesterList = document.getElementById('semester-list');
+    semesterList.innerHTML = '';
+
+    semesters.forEach(semester => {
+      const semesterDiv = document.createElement('div');
+      semesterDiv.className = 'col-3 mb-3 p-3';
+      semesterDiv.innerHTML = `
+      <div class="text-center font-weight-bold mb-3">${semester.name}</div>
+      <div class="row">
+        <div class="col-12 mb-1">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <span class="small text-muted">推荐指数</span>
+            <span class="small font-weight-bold text-success">${semester.recommend.toFixed(1)}</span>
+          </div>
+          <div class="progress" style="height: 6px;">
+            <div class="progress-bar bg-success" style="width: ${(semester.recommend / 5) * 100}%"></div>
+          </div>
+        </div>
+        <div class="col-12 mb-1">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <span class="small text-muted">内容质量</span>
+            <span class="small font-weight-bold text-info">${semester.content.toFixed(1)}</span>
+          </div>
+          <div class="progress" style="height: 6px;">
+            <div class="progress-bar bg-info" style="width: ${(semester.content / 5) * 100}%"></div>
+          </div>
+        </div>
+        <div class="col-12 mb-1">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <span class="small text-muted">工作量</span>
+            <span class="small font-weight-bold text-warning">${semester.workload.toFixed(1)}</span>
+          </div>
+          <div class="progress" style="height: 6px;">
+            <div class="progress-bar bg-warning" style="width: ${(semester.workload / 5) * 100}%"></div>
+          </div>
+        </div>
+        <div class="col-12 mb-1">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <span class="small text-muted">成绩</span>
+            <span class="small font-weight-bold text-primary">${semester.grade.toFixed(1)}</span>
+          </div>
+          <div class="progress" style="height: 6px;">
+            <div class="progress-bar bg-primary" style="width: ${(semester.grade / 5) * 100}%"></div>
+          </div>
+        </div>
+      </div>
+    `;
+      semesterList.appendChild(semesterDiv);
+    });
+  }
+
+  function updateReviewsList(reviews) {
+    const reviewsList = document.getElementById('reviews-list');
+    reviewsList.innerHTML = '';
+
+    reviews.forEach((review, index) => {
+      const reviewCard = document.createElement('div');
+      reviewCard.className = 'card mb-3 shadow-sm';
+      reviewCard.innerHTML = `
+      <div class="card-body p-3">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <h6 class="card-title mb-1 text-dark">${review.title}</h6>
+          <span class="badge badge-secondary badge-pill mr-2">${review.semester}</span>
+        </div>
+        <div class="text-muted small mb-2">
+          <span class="text-muted">授课教师：${review.teacher}</span>
+        </div>
+        <p class="card-text small mb-3">${review.text}</p>
+        
+        <!-- 评分图标 - 垂直布局 -->
+        <div class="row mb-3">
+          <div class="col-6 col-md-3 mb-2">
+            <div class="text-center p-2 border rounded bg-light">
+              <div class="small text-muted mb-1">推荐指数</div>
+              <div class="h6 mb-1 text-success">${review.rating_recommend}.0</div>
+              <div>${generateStars(review.rating_recommend)}</div>
+            </div>
+          </div>
+          <div class="col-6 col-md-3 mb-2">
+            <div class="text-center p-2 border rounded bg-light">
+              <div class="small text-muted mb-1">内容质量</div>
+              <div class="h6 mb-1 text-info">${review.rating_content}.0</div>
+              <div>${generateStars(review.rating_content)}</div>
+            </div>
+          </div>
+          <div class="col-6 col-md-3 mb-2">
+            <div class="text-center p-2 border rounded bg-light">
+              <div class="small text-muted mb-1">工作量</div>
+              <div class="h6 mb-1 text-warning">${review.rating_workload}.0</div>
+              <div>${generateStars(review.rating_workload)}</div>
+            </div>
+          </div>
+          <div class="col-6 col-md-3 mb-2">
+            <div class="text-center p-2 border rounded bg-light">
+              <div class="small text-muted mb-1">成绩</div>
+              <div class="h6 mb-1 text-primary">${review.rating_grade}.0</div>
+              <div>${generateStars(review.rating_grade)}</div>
+            </div>
+          </div>
+        </div>
+
+        <small class="text-muted">${review.time}</small>
+        
+        <!-- 点赞点踩按钮 -->
+        <div class="d-flex justify-content-end border-top pt-2">
+          <button class="btn btn-sm btn-outline-success mr-2" onclick="handleLike(${index}, true)">
+            👍 <span id="like-${index}">${review.likes}</span>
+          </button>
+          <button class="btn btn-sm btn-outline-danger" onclick="handleLike(${index}, false)">
+            👎 <span id="dislike-${index}">${review.dislikes}</span>
+          </button>
+        </div>
+      </div>
+    `;
+      reviewsList.appendChild(reviewCard);
+    });
+  }
+
+  function generateStars(score) {
+    let stars = '';
+    for (let i = 1; i <= 5; i++) {
+      if (i <= score) {
+        stars += '<span class="text-warning">★</span>';
+      } else {
+        stars += '<span class="text-muted">☆</span>';
+      }
+    }
+    return stars;
+  }
+
+  function handleLike(reviewIndex, isLike) {
+    // 这里可以添加实际的点赞/点踩逻辑
+    const element = document.getElementById(isLike ? `like-${reviewIndex}` : `dislike-${reviewIndex}`);
+    const currentCount = parseInt(element.textContent);
+    element.textContent = currentCount + 1;
+  }
+
+  // 默认选择第一门课
+  const firstCourse = DATA[0]?.courses[0]?.id;
+  if (firstCourse) document.addEventListener('DOMContentLoaded', () => selectCourse(firstCourse));
+</script>
+<script>
+  // Pagination variables
+  let currentPage = -1;
+  let totalPages = 1;
+  let reviewsPerPage = 5;
+  // Initialize pagination
+  // Excuted every time a new course is selected and when page loads
+  function initPagination() {
+    // console.log('Total Pages:', totalPages);
+    if (totalPages <= 1) {
+      document.getElementById('pagination-container').style.display = 'none';
+    }
+    else {
+      document.getElementById('pagination-container').style.display = 'flex';
+    }
+    changePage(1);
+  }
+  function renderPagination() {
+    const container = document.getElementById('pagination-container');
+    if (!container) return;
+    container.innerHTML = '';
+    // Previous button
+    const prevLi = document.createElement('li');
+    prevLi.className = `page-item ${currentPage === 1 ? 'disabled' : ''}`;
+    prevLi.innerHTML = `<a class="page-link" href="javascript:void(0);" onclick="changePage(${currentPage - 1})">上一页</a>`;
+    container.appendChild(prevLi);
+    // Page numbers logic
+    let startPage = 1;
+    let endPage = totalPages;
+    if (totalPages > 7) {
+      if (currentPage <= 4) {
+        // Near beginning
+        startPage = 1;
+        endPage = 5;
+      } else if (currentPage >= totalPages - 3) {
+        // Near end
+        startPage = totalPages - 4;
+        endPage = totalPages;
+      } else {
+        // In middle
+        startPage = currentPage - 2;
+        endPage = currentPage + 2;
+      }
+    }
+    // First page (if not in range)
+    if (startPage > 1) {
+      const firstLi = document.createElement('li');
+      firstLi.className = 'page-item';
+      firstLi.innerHTML = `<a class="page-link" href="javascript:void(0);" onclick="changePage(1)">1</a>`;
+      container.appendChild(firstLi);
+      if (startPage > 2) {
+        const dotsLi = document.createElement('li');
+        dotsLi.className = 'page-item disabled';
+        dotsLi.innerHTML = '<span class="page-link">...</span>';
+        container.appendChild(dotsLi);
+      }
+    }
+    // Page numbers in range
+    for (let i = startPage; i <= endPage; i++) {
+      const pageLi = document.createElement('li');
+      pageLi.className = `page-item ${i === currentPage ? 'active' : ''}`;
+      pageLi.innerHTML = `<a class="page-link" href="javascript:void(0);" onclick="changePage(${i})">${i}</a>`;
+      container.appendChild(pageLi);
+    }
+    // Last page (if not in range)
+    if (endPage < totalPages) {
+      if (endPage < totalPages - 1) {
+        const dotsLi = document.createElement('li');
+        dotsLi.className = 'page-item disabled';
+        dotsLi.innerHTML = '<span class="page-link">...</span>';
+        container.appendChild(dotsLi);
+      }
+      const lastLi = document.createElement('li');
+      lastLi.className = 'page-item';
+      lastLi.innerHTML = `<a class="page-link" href="javascript:void(0);" onclick="changePage(${totalPages})">${totalPages}</a>`;
+      container.appendChild(lastLi);
+    }
+    // Next button
+    const nextLi = document.createElement('li');
+    nextLi.className = `page-item ${currentPage === totalPages ? 'disabled' : ''}`;
+    nextLi.innerHTML = `<a class="page-link" href="javascript:void(0);" onclick="changePage(${currentPage + 1})">下一页</a>`;
+    container.appendChild(nextLi);
+  }
+  function changePage(page) {
+    console.log('Changing to page:', page);
+    currentPage = page;
+    renderPagination();
+    loadPageData(page);
+  }
+  function loadPageData(page) {
+    // This is where you would load actual review data for the page
+    console.log('Loading page:', page);
+    const data = $.ajax({
+      url: "{% url 'getCourseReviews' %}",
+      method: "GET",
+      data: { id: document.querySelector('.list-select-course.active')?.dataset.courseId, page: page},
+      dataType: "json",
+      async: false
+    }).responseJSON;
+    if (data.error) {
+      console.error(data.error);
+      return;
+    }
+    console.log(data.reviews);
+    updateReviewsList(data.reviews);
+  }
+</script>
+  <style>
+    #course-eval-app .list-group-item.active {transition: background-color .15s; }
+    #course-eval-app .list-group-item .badge {min - width: 2.2rem; }
+    #course-eval-app .progress {
+      background - color: #e9ecef;
+    border-radius: 10px;
+    }
+    #course-eval-app .progress-bar {
+      border - radius: 10px;
+    }
+    #course-eval-app .card-title {font - size: 1rem; }
+    #course-eval-app .shadow-sm {box - shadow: 0 .125rem .25rem rgba(0,0,0,.075)!important; }
+    #course-eval-app .bg-light {background - color: #f8f9fa!important; }
+    .border {border: 1px solid #dee2e6!important; }
+    .rounded {border - radius: 0.25rem!important; }
+  </style>
+  {% endblock %}

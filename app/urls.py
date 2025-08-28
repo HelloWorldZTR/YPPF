@@ -89,6 +89,10 @@ urlpatterns = [
          name="showCourseActivity"),
     path("showCourseRecord/", course_views.showCourseRecord,
          name="showCourseRecord"),
+     #课程评价
+     path("coursesReview/", review_views.coursesOverview, name="coursesOverview"),
+     path("getCourseInfo/", review_views.getCourseInfo, name="getCourseInfo"),
+     path("getCourseReviews/", review_views.getCourseReviews, name="getCourseReviews"),
     # 数据导出
     path("outputRecord/", course_views.outputRecord, name="outputRecord"),
     path("outputSelectInfo/", course_views.outputSelectInfo,
