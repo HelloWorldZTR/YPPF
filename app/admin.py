@@ -760,6 +760,18 @@ class CourseRecordAdmin(admin.ModelAdmin):
         queryset.update(invalid=False)
         return self.message_user(request=request, message='修改成功!')
 
+@admin.register(CourseReview)
+class ReviewAdmin(admin.ModelAdmin):
+    list_display = ["title", "reviewer", "course", "time"]
+    search_fields = ("title", "reviewer__name", "course")
+    list_filter = ["time"]
+    actions = []
+
+@admin.register(ReviewCategories)
+class ReviewCategoriesAdmin(admin.ModelAdmin):
+    list_display = ["course_name"]
+    search_fields = ("course_name",)
+    actions = []
 
 @admin.register(AcademicTag)
 class AcademicTagAdmin(admin.ModelAdmin):

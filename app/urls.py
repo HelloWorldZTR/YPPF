@@ -19,6 +19,7 @@ from app import (
     academic_views,
     chat_api,
     YQPoint_views,
+    review_views
 )
 
 # 尽量不使用<type:arg>, 不支持

@@ -94,6 +94,8 @@ __all__ = [
     'PoolRecord',
     'ActivitySummary',
     'HomepageImage',
+    'CourseReview',
+    'ReviewCategories'
 ]
 
 
@@ -1983,3 +1985,53 @@ class HomepageImage(models.Model):
         return self.image.name + ' ' + self.description
 
     objects: HomepageImageManager = HomepageImageManager()
+
+
+class ReviewCategories(models.Model): # 用于测评的课程列表，由于课程可能会同名，我们把同名的归类成一个model
+    class Meta:
+        verbose_name = "4.测评课程列表"
+        verbose_name_plural = verbose_name
+        ordering = ["course_name"]
+
+    course_name = models.CharField("课程名称", max_length=60, unique=True)
+    course_type = models.SmallIntegerField("课程类型", choices=Course.CourseType.choices, blank=False)
+    classes = models.ManyToManyField(Course, related_name="review_courses", blank=True) # 真正的课程
+
+    def __str__(self):
+        return self.course_name
+
+class CourseReview(models.Model):
+    class Meta:
+        verbose_name = "4. 课程测评"
+        verbose_name_plural = verbose_name
+        ordering = ["-time"]
+    
+    course = models.ForeignKey(ReviewCategories, on_delete=models.CASCADE, verbose_name="测评课程")
+    time = models.DateTimeField("评论时间", auto_now_add=True)
+    reviewer = models.ForeignKey(
+        User, on_delete=models.CASCADE, verbose_name="评论者")
+    
+    semester = [models.SmallIntegerField("学年", default=current_year),
+                models.CharField("学期", choices=Semester.choices,
+                                 max_length=15,
+                                 default=current_semester)]
+
+    class Rating(models.IntegerChoices):
+        ONE = (1, "1分")
+        TWO = (2, "2分")
+        THREE = (3, "3分")
+        FOUR = (4, "4分")
+        FIVE = (5, "5分")
+    ratings = [
+        models.SmallIntegerField("总体评价", choices=Rating.choices, default=Rating.FIVE),
+        models.SmallIntegerField("内容质量", choices=Rating.choices, default=Rating.FIVE),
+        models.SmallIntegerField("工作量", choices=Rating.choices, default=Rating.FIVE),
+        models.SmallIntegerField("考核", choices=Rating.choices, default=Rating.FIVE),
+    ]
+
+    title = models.CharField("测评标题", max_length=100, blank=False)
+    text = models.TextField("详细评价", default="", blank=False)
+
+    anonymous_flag = models.BooleanField("是否匿名", default=False)
+    likes = models.IntegerField("点赞数", default=0)
+    liked_users = models.ManyToManyField(User, related_name="liked_reviews", blank=True)
