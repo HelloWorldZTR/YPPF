@@ -1,8 +1,9 @@
 from rest_framework import serializers
 from rest_framework.pagination import PageNumberPagination
 from django.core.exceptions import ValidationError as DjangoValidationError
-from .models import CourseReview, ReviewCategories, NaturalPerson, ReviewReaction
+from .models import CourseReview, ReviewCategories, NaturalPerson, ReviewReaction, Semester
 from app.utils import get_classified_user
+from datetime import datetime
 
 class CourseReviewSerializer(serializers.ModelSerializer):
     """
@@ -14,7 +15,7 @@ class CourseReviewSerializer(serializers.ModelSerializer):
         fields = [
             'course', 'teacher', 'title', 'text', 
             'rating_recommend', 'rating_content', 'rating_workload', 'rating_grade',
-            'anonymous_flag'
+            'anonymous_flag', 'school_year', 'semester'
         ]
     
     # Override course field to validate against ReviewCategories
@@ -47,6 +48,21 @@ class CourseReviewSerializer(serializers.ModelSerializer):
         error_messages={
             'required': '请输入详细评价',
             'blank': '详细评价不能为空'
+        }
+    )
+    
+    school_year = serializers.IntegerField(
+        error_messages={
+            'required': '请选择学年',
+            'invalid': '学年格式错误'
+        }
+    )
+    
+    semester = serializers.ChoiceField(
+        choices=Semester.choices,
+        error_messages={
+            'required': '请选择学期',
+            'invalid_choice': '学期选择无效'
         }
     )
     
@@ -140,6 +156,60 @@ class CourseReviewSerializer(serializers.ModelSerializer):
             return rating_int
         except (ValueError, TypeError):
             raise serializers.ValidationError('评分格式错误')
+    
+    def validate_school_year(self, value):
+        """Validate school year"""
+        current_year = datetime.now().year
+        current_month = datetime.now().month
+        
+        # Determine current academic year (starts in September)
+        if current_month >= 9:
+            current_academic_year = current_year
+        else:
+            current_academic_year = current_year - 1
+        
+        # Check if year is too far in the past (more than 4 years)
+        if value < current_academic_year - 4:
+            raise serializers.ValidationError('不能选择超过4年前的学年')
+        
+        # Check if year is in the future
+        if value > current_academic_year:
+            raise serializers.ValidationError('不能选择未来的学年')
+        
+        return value
+    
+    def validate(self, data):
+        """Cross-field validation for semester and year combination"""
+        school_year = data.get('school_year')
+        semester = data.get('semester')
+        
+        if school_year and semester:
+            current_date = datetime.now()
+            current_year = current_date.year
+            current_month = current_date.month
+            
+            # Check if the selected semester is in the future
+            is_future = False
+            
+            if school_year > current_year:
+                is_future = True
+            elif school_year == current_year:
+                if semester == 'Fall' and current_month < 9:
+                    is_future = True
+                elif semester == 'Spring' and current_month < 2:
+                    is_future = True
+            elif school_year == current_year - 1:
+                if semester == 'Fall' and current_month < 2:
+                    # Fall semester of previous year is still valid if we're in Jan
+                    pass
+                elif semester == 'Spring' and current_month < 9:
+                    # Spring semester of previous year is valid until September
+                    pass
+            
+            if is_future:
+                raise serializers.ValidationError('不能选择未来的学期')
+        
+        return data
     
     def create(self, validated_data):
         """

@@ -218,7 +218,15 @@ def postReview(request):
             error_messages = []
             for field, errors in serializer.errors.items():
                 for error in errors:
-                    error_messages.append(f"{error}")
+                    if isinstance(error, dict):
+                        # Handle nested validation errors
+                        for key, msgs in error.items():
+                            if isinstance(msgs, list):
+                                error_messages.extend(msgs)
+                            else:
+                                error_messages.append(str(msgs))
+                    else:
+                        error_messages.append(str(error))
             
             html_display = wrong("请检查输入内容：" + "；".join(error_messages))
             
