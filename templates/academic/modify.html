@@ -63,6 +63,7 @@ select[readonly] {
                                 <!--  BEGIN FORM AREA  -->
                                 <div class="widget-content widget-content-area">
                                     <form role="form" method="POST" enctype="multipart/form-data">
+                                    {% csrf_token %}
                                         
                                         <div class="form-group card-label">
                                             <div style="display:flex; justify-content:space-between;">

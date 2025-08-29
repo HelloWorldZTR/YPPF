@@ -25,6 +25,7 @@
           {% if editable %}
             <div class="btn-group" role="group" style="display: table-cell; vertical-align:middle; left:20px;">
               <form method="POST">
+              {% csrf_token %}
                 <button class="btn btn-sm btn-primary" name="post_type" value="download">
                     <i class="bi bi-solid bi-download" style="font-size:15px; "></i>
                 </button>
@@ -45,6 +46,7 @@
         </div>
 
         <form method="POST">
+        {% csrf_token %}
           <div class="col-12 layout-spacing">
             <div class="statbox widget box box-shadow">
               <table class="table table-striped table-active" id="store_table">

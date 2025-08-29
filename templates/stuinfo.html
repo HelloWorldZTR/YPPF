@@ -82,11 +82,21 @@
         <script type="text/javascript">
             let share_confirm = confirm("{{alert_message}}");
             if (share_confirm) {
-                const req = new XMLHttpRequest();
-                req.open('POST', '{{ post_url }}', true);
-                req.responseType = 'blob';
-                req.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded'); //设置请求头
-                req.send("option=" + "cancelInformShare"); //输入参数 参数的值为option="share"
+                document.addEventListener('DOMContentLoaded', function() {
+                    $.ajax({
+                            url: '{{ post_url }}',
+                            method: 'POST',
+                            data: {
+                                csrfmiddlewaretoken: document.querySelector('[name=csrf-token]').content,
+                            option: "cancelInformShare"
+                        },
+                        success: function(data) {
+                        },
+                        error: function(xhr, status, error) {
+                            console.error('Request failed:', error);
+                        }
+                    });
+                });
             }
         </script>
     {% endif %}

@@ -205,6 +205,7 @@
 								</div>
 
 								<form method="POST">
+								{% csrf_token %}
 									<div class="appointment-action">
 										<button type="submit" class="btn btn-sm bg-warning-light"
 											name="feedback" value="{{appoint.Aid}}">

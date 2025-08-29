@@ -161,6 +161,7 @@
                                     <td>{{course.current_participants}}/{{course.capacity}}</td>
                                     <td>
                                         <form action="/selectCourse/" method="post">
+                                        {% csrf_token %}
                                             <input type="hidden" id="courseid" name="courseid"value="{{course.course_id}}" />
                                             <input type="hidden" id="action" name="action"value="select" />
                                             {% if course.status != "预选" and course.status != "补退选" or is_student == False %}
@@ -241,6 +242,7 @@
                                             <td>{{course.current_participants}}/{{course.capacity}}</td>
                                             <td>
                                                 <form action="/selectCourse/" method="post">
+                                                {% csrf_token %}
                                                     <input type="hidden" id="courseid" name="courseid"value="{{course.course_id}}" />
                                                     <input type="hidden" id="action" name="action"value="select" />
                                                     {% if course.status != "预选" and course.status != "补退选" or is_student == False %}
@@ -344,6 +346,7 @@
                         <td>{{course.current_participants}}/{{course.capacity}}</td>
                         <td>
                             <form action="/selectCourse/" method="post">
+                            {% csrf_token %}
                                 <input type="hidden" id="courseid" name="courseid"value="{{course.course_id}}" />
                                 <input type="hidden" id="action" name="action"value="cancel" />
                                 {% if course.status != "预选" and course.status != "补退选" or course.student_status == "选课失败" %}

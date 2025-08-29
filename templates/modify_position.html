@@ -74,6 +74,7 @@
                                     <!--  BEGIN CONTENT AREA  -->
                                     <div class="widget-content widget-content-area">
                                         <form role="form" method="POST" enctype="multipart/form-data">
+                                        {% csrf_token %}
                                             <div class="form-group">
                                                 <label for="aintro">成员变动类型</label>
                                                 <select class="form-control selectpicker" data-live-search = "true" id="apply_type" name="apply_type" onchange = "type_change()" {%if not allow_form_edit %} readonly="readonly"{%endif%}>

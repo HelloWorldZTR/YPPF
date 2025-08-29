@@ -420,12 +420,6 @@
 
   function handleLike(reviewId, action, index) {
     // Send AJAX request to handle like/dislike
-    $.ajaxSetup({
-        xhrFields: {
-            withCredentials: true
-        },
-        crossDomain: true
-    });
     $.ajax({
       url: "{% url 'likeReview' %}",
       method: "POST",

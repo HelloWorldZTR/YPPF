@@ -43,6 +43,7 @@
                                     </a>
                                     <div class="dropdown-menu" style="max-width: 200%; max-height: 300%;">
                                         <form role="form" method="POST" enctype="multipart/form-data">
+                                        {% csrf_token %}
                                             <button class="dropdown-item" type="submit"
                                                 name='close_all' value="1"
                                                 onclick="return confirm('你确定要将全部问答关闭吗?')">关闭全部问答</button>

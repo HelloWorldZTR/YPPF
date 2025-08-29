@@ -72,6 +72,7 @@
                 </div>
                 {% if longterm_appoint.get_status_display == "审核中" %}
                     <form method="POST" class="w-100 d-flex">
+                    {% csrf_token %}
                         <input type="hidden" name="operation" value="approve">
                         <input type="hidden" name="reason" value="">
                         <button type="submit" class="btn btn-primary flex-fill mr-2" id="approve">通过</button>
@@ -91,6 +92,7 @@
                 <div class="modal-content" >
                     <div class="modal-body" >
                         <form method="POST">
+                        {% csrf_token %}
                             <div class="form-group card-label">
                                 <label>请填写未通过原因</label>
                                 <textarea class="form-control" name="reason" type="text" required value="" style="height:10rem;resize:none"></textarea>

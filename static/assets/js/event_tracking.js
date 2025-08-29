@@ -14,7 +14,7 @@
 // 如果分析数据需要用到PD，可以排除用 这些设备+浏览器 所得到的记录（如果它们不是很多的话）。因为这类设备上只记录了PV
 
 function getCSRFToken() {
-return document.querySelector('[name=csrf-token]').content;
+    return document.querySelector('[name=csrf-token]').content;
 }
 
 function getExplore(){

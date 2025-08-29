@@ -1,0 +1,335 @@
+{% extends "base.html" %}
+{% block mainpage %}
+    <!--  BEGIN CONTENT AREA  -->
+    <div id="content" class="main-content pb-3" style="overflow: hidden;">
+        {% if html_display.warn_code == 2 %}
+            <div class="alert alert-success text-center mb-0">{{ html_display.warn_message }}</div>
+        {% elif html_display.warn_code == 1 %}
+            <div class="alert alert-warning text-center mb-0">{{ html_display.warn_message }}</div>
+        {% endif %}
+        <div class="container py-4" id="course-eval-app">
+            <div class="col-12">
+                <div class="card h-100">
+                    <div class="card-header d-flex align-items-center justify-content-between">
+                        <h5 class="mb-0" id="detail-title">我的测评</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="detail-placeholder" class="text-muted" style="display: none;">你还没有发布过课程评测哦🤔</div>
+                        <div id="my-reviews-list">
+                            
+                            <!-- all my reviews goes here-->
+                        </div>
+                        <nav aria-label="评价分页" class="mt-3">
+                            <ul class="pagination justify-content-center" id="pagination-container">
+                                <!-- Pagination will be dynamically generated -->
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- END CONTENT AREA -->
+    <script>
+    // const reviews = [
+    //     {
+    //         id: 11,
+    //         likes: 1,
+    //         dislikes: 999,
+    //         rating_content: 5,
+    //         rating_grade: 5,
+    //         rating_recommend: 5,
+    //         rating_workload: 5,
+    //         reviewer: "123",
+    //         reviewer_avatar: "/media/avatar/001.png",
+    //         semester: "2023-2024-1",
+    //         teacher: "13",
+    //         text: "1231232222222222222222",
+    //         time: "2025-08-29",
+    //         title: "123123",
+    //         visibility: true
+    //     },
+    //     {
+    //         id: 12,
+    //         likes: 2,
+    //         dislikes: 888,
+    //         rating_content: 5,
+    //         rating_grade: 5,
+    //         rating_recommend: 5,
+    //         rating_workload: 5,
+    //         reviewer: "123",
+    //         reviewer_avatar: "/media/avatar/001.png",
+    //         semester: "2023-2024-1",
+    //         teacher: "13",
+    //         text: "1231232222222222222222",
+    //         time: "2025-08-29",
+    //         title: "123123",
+    //         visibility: false
+    //     }
+    // ]
+function initialize(){
+    $.ajax({
+      url: "{% url 'getMyReviews' %}",
+      method: "GET",
+      data: { page: 1},
+      dataType: "json",
+      async: false,
+      success: function(data) {
+        totalPages = data.totalPages;
+        currentPage = 1;
+        if(data.reviews.length === 0){
+            document.getElementById('detail-placeholder').style.display = 'block';
+        }
+        else {
+            updateReviewsList(data.reviews);
+            initPagination();
+        }
+      }
+    });
+}
+function updateReviewsList(reviews) {
+    const reviewsList = document.getElementById('my-reviews-list');
+    reviewsList.innerHTML = '';
+
+    reviews.forEach((review, index) => {
+      const reviewCard = document.createElement('div');
+      reviewCard.className = 'card mb-3 shadow-sm';
+      reviewCard.innerHTML = `
+      <div class="card-body p-3">
+        <!-- Reviewer info header -->
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <div class="d-flex align-items-center">
+            <div class="reviewer-avatar mr-3">
+              <div class="avatar-circle align-items-center justify-content-center bg-light">
+                <img src="${review.reviewer_avatar}" alt="${review.reviewer}" class="img-fluid rounded-circle">
+              </div>
+            </div>
+            <div>
+              <h6 class="card-title mb-1 text-dark">${review.title}</h6>
+              <div class="d-flex align-items-center">
+                <span class="text-muted small mr-2">by ${review.reviewer}</span>
+                <span class="badge badge-secondary badge-pill">${review.semester}</span>
+              </div>
+            </div>
+          </div>
+          <small class="text-muted">${review.time}</small>
+        </div>
+        
+        <div class="text-muted small mb-2">
+          <span class="text-muted">授课教师：${review.teacher}</span>
+        </div>
+        <p class="card-text small mb-3">${review.text}</p>
+        
+        <!-- 评分图标 - 垂直布局 -->
+        <div class="row mb-3">
+          <div class="col-6 col-md-3 mb-2">
+            <div class="text-center p-2 border rounded bg-light">
+              <div class="small text-muted mb-1">推荐指数</div>
+              <div class="h6 mb-1 text-success">${review.rating_recommend}.0</div>
+              <div>${generateStars(review.rating_recommend)}</div>
+            </div>
+          </div>
+          <div class="col-6 col-md-3 mb-2">
+            <div class="text-center p-2 border rounded bg-light">
+              <div class="small text-muted mb-1">内容质量</div>
+              <div class="h6 mb-1 text-info">${review.rating_content}.0</div>
+              <div>${generateStars(review.rating_content)}</div>
+            </div>
+          </div>
+          <div class="col-6 col-md-3 mb-2">
+            <div class="text-center p-2 border rounded bg-light">
+              <div class="small text-muted mb-1">工作量</div>
+              <div class="h6 mb-1 text-warning">${review.rating_workload}.0</div>
+              <div>${generateStars(review.rating_workload)}</div>
+            </div>
+          </div>
+          <div class="col-6 col-md-3 mb-2">
+            <div class="text-center p-2 border rounded bg-light">
+              <div class="small text-muted mb-1">成绩</div>
+              <div class="h6 mb-1 text-primary">${review.rating_grade}.0</div>
+              <div>${generateStars(review.rating_grade)}</div>
+            </div>
+          </div>
+        </div>`;
+    
+        
+      reviewCard.innerHTML += `<!-- 点赞点踩按钮 -->
+        <div class="d-flex justify-content-end border-top pt-2 mb-2">
+          <button class="btn btn-sm mr-2 btn-outline-success">
+            👍 <span id="like-${index}">${review.likes}</span>
+          </button>
+          <button class="btn btn-sm mr-2 btn-outline-danger"> 👎 <span id="dislike-${index}">${review.dislikes}</span>
+          </button>
+        </div>
+      </div>
+    `;
+      reviewsList.appendChild(reviewCard);
+    });
+}
+function generateStars(score) {
+    let stars = '';
+    for (let i = 1; i <= 5; i++) {
+      if (i <= score) {
+        stars += '<span class="text-warning">★</span>';
+      } else {
+        stars += '<span class="text-muted">☆</span>';
+      }
+    }
+    return stars;
+  }
+document.addEventListener('DOMContentLoaded', initialize);
+    </script>
+    <script>
+  // Pagination variables
+  let currentPage = -1;
+  let totalPages = 1;
+  let reviewsPerPage = 5;
+  // Initialize pagination
+  // Excuted every time a new course is selected and when page loads
+  function initPagination() {
+    // console.log('Total Pages:', totalPages);
+    if (totalPages <= 1) {
+      document.getElementById('pagination-container').style.display = 'none';
+    }
+    else {
+      document.getElementById('pagination-container').style.display = 'flex';
+    }
+  }
+  function renderPagination() {
+    const container = document.getElementById('pagination-container');
+    if (!container) return;
+    container.innerHTML = '';
+    // Previous button
+    const prevLi = document.createElement('li');
+    prevLi.className = `page-item ${currentPage === 1 ? 'disabled' : ''}`;
+    prevLi.innerHTML = `<a class="page-link" href="javascript:void(0);" onclick="changePage(${currentPage - 1})">上一页</a>`;
+    container.appendChild(prevLi);
+    // Page numbers logic
+    let startPage = 1;
+    let endPage = totalPages;
+    if (totalPages > 7) {
+      if (currentPage <= 4) {
+        // Near beginning
+        startPage = 1;
+        endPage = 5;
+      } else if (currentPage >= totalPages - 3) {
+        // Near end
+        startPage = totalPages - 4;
+        endPage = totalPages;
+      } else {
+        // In middle
+        startPage = currentPage - 2;
+        endPage = currentPage + 2;
+      }
+    }
+    // First page (if not in range)
+    if (startPage > 1) {
+      const firstLi = document.createElement('li');
+      firstLi.className = 'page-item';
+      firstLi.innerHTML = `<a class="page-link" href="javascript:void(0);" onclick="changePage(1)">1</a>`;
+      container.appendChild(firstLi);
+      if (startPage > 2) {
+        const dotsLi = document.createElement('li');
+        dotsLi.className = 'page-item disabled';
+        dotsLi.innerHTML = '<span class="page-link">...</span>';
+        container.appendChild(dotsLi);
+      }
+    }
+    // Page numbers in range
+    for (let i = startPage; i <= endPage; i++) {
+      const pageLi = document.createElement('li');
+      pageLi.className = `page-item ${i === currentPage ? 'active' : ''}`;
+      pageLi.innerHTML = `<a class="page-link" href="javascript:void(0);" onclick="changePage(${i})">${i}</a>`;
+      container.appendChild(pageLi);
+    }
+    // Last page (if not in range)
+    if (endPage < totalPages) {
+      if (endPage < totalPages - 1) {
+        const dotsLi = document.createElement('li');
+        dotsLi.className = 'page-item disabled';
+        dotsLi.innerHTML = '<span class="page-link">...</span>';
+        container.appendChild(dotsLi);
+      }
+      const lastLi = document.createElement('li');
+      lastLi.className = 'page-item';
+      lastLi.innerHTML = `<a class="page-link" href="javascript:void(0);" onclick="changePage(${totalPages})">${totalPages}</a>`;
+      container.appendChild(lastLi);
+    }
+    // Next button
+    const nextLi = document.createElement('li');
+    nextLi.className = `page-item ${currentPage === totalPages ? 'disabled' : ''}`;
+    nextLi.innerHTML = `<a class="page-link" href="javascript:void(0);" onclick="changePage(${currentPage + 1})">下一页</a>`;
+    container.appendChild(nextLi);
+  }
+  function changePage(page) {
+    console.log('Changing to page:', page);
+    currentPage = page;
+    renderPagination();
+    loadPageData(page);
+  }
+  function loadPageData(page) {
+    const data = $.ajax({
+      url: "{% url 'getMyReviews' %}",
+      method: "GET",
+      data: { page: page},
+      dataType: "json",
+      async: false
+    }).responseJSON;
+    if (data.error) {
+      console.error(data.error);
+      return;
+    }
+    console.log(data.reviews);
+    updateReviewsList(data.reviews);
+  }
+    </script>
+    <style>
+    #course-eval-app .list-group-item.active {transition: background-color .15s; }
+    #course-eval-app .list-group-item .badge {min - width: 2.2rem; }
+    #course-eval-app .progress {
+      background - color: #e9ecef;
+    border-radius: 10px;
+    }
+    #course-eval-app .progress-bar {
+      border - radius: 10px;
+    }
+    #course-eval-app .card-title {font - size: 1rem; }
+    #course-eval-app .card-text {white-space: pre-line;}
+    #course-eval-app .shadow-sm {box - shadow: 0 .125rem .25rem rgba(0,0,0,.075)!important; }
+    #course-eval-app .bg-light {background - color: #f8f9fa!important; }
+    .border {border: 1px solid #dee2e6!important; }
+    .rounded {border - radius: 0.25rem!important; }
+    
+    /* Avatar styles */
+    .reviewer-avatar .avatar-circle {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      font-size: 16px;
+      font-weight: 600;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    /* Enhanced card styling */
+    #course-eval-app .card {
+      border: 1px solid #e3e6f0;
+      transition: all 0.15s ease-in-out;
+    }
+    
+    #course-eval-app .card:hover {
+      box-shadow: 0 0.25rem 0.5rem rgba(0,0,0,0.1)!important;
+      transform: translateY(-1px);
+    }
+    
+    /* Reviewer info styling */
+    #course-eval-app .card-title {
+      font-size: 1rem;
+      margin-bottom: 0.25rem;
+    }
+    
+    #course-eval-app .text-muted.small {
+      font-size: 0.825rem;
+    }
+    </style>
+{% endblock %}

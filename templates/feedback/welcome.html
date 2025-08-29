@@ -414,6 +414,7 @@
                                                         </div>
                                                         <div role="group" class="d-flex justify-content-start">
                                                                 <form method="POST" id="delete_form">
+                                                                {% csrf_token %}
                                                                     <a data-toggle="tooltip" title="删除" onclick="if(confirm('确认要删除反馈草稿吗？')){document.getElementById('delete_form').submit();}" type="submit">
                                                                     <input type="hidden" name="option" value="delete">
                                                                     <input type="hidden" name="id" value="{{feedback.id}}">
@@ -487,6 +488,7 @@
                                                             <div role="group" class="d-flex">
                                                                 {% if is_person %}
                                                                 <form method="POST" id="cancel_form">
+                                                                {% csrf_token %}
                                                                     <a data-toggle="tooltip" title="撤回" type="button" 
                                                                         onclick="if(confirm('确认要撤回反馈吗？')){document.getElementById('cancel_form').submit();}">
                                                                         <input type="hidden" value="withdraw" name="option">

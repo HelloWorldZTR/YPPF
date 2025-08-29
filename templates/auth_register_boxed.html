@@ -29,6 +29,7 @@
                         <h1 class="">Register</h1>
                         <p class="signup-link register">Already have an account? <a href="/index/">Log in</a></p>
                         <form class="text-left" method="POST">
+                            {% csrf_token %}
                             <div class="form">
 
                                 <div id="username-field" class="field-wrapper input">

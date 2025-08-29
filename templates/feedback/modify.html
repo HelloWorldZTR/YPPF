@@ -60,7 +60,7 @@
                                     <!--  BEGIN CONTENT AREA  -->
                                     <div class="widget-content widget-content-area">
                                         <form role="form" method="POST" enctype="multipart/form-data">
-                                            
+                                            {% csrf_token %}
                                             <div class="form-group">
                                                 <label for="aintro">反馈类型</label>
                                                 <select class="form-control selectpicker" data-live-search="true" id="type" name="type" onchange="change_org_type_and_org.call(this)" 

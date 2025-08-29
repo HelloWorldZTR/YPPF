@@ -28,6 +28,7 @@
             <div class="row layout-top-spacing">
                 <div class="col-12 collapse mb-4 pt-2 order-first collapsed form-group collapse show" id="collapseExample">
                     <form action="/yplibrary/search/" method="POST" role="search" id="SearchBookForm">
+                        {% csrf_token %}
                         <div class="row">
                           <div class="col-12 input-group pt-4 pb-3">
                             <input type="text" class="form-control" id="keywords" 

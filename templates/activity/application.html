@@ -92,6 +92,7 @@
                                     <div class="widget-content widget-content-area">
 
                                         <form role="form" method="POST" enctype="multipart/form-data" onsubmit="return check_inputs()">
+                                            {% csrf_token %}
                                             <p>
                                                 活动信息
                                                 <a data-toggle="tooltip" data-placement="bottom" title="填写活动的基本信息；注意：预算、名称在审核通过后不能修改">
@@ -454,6 +455,7 @@
                                         </div>
                                             {% if commentable %}
                                             <form method="POST" role="form" onsubmit="return check_examine()">
+                                                {% csrf_token %}
                                                 <div class="row">
                                                     <div class="col">
                                                     <button type="submit" class="btn btn-primary btn-block mb-4 mr-2"
@@ -473,6 +475,7 @@
                                             </form>
                                             {% else %}
                                             <form method="POST" role="form" >
+                                            {% csrf_token %}
                                                 <button type="submit" class="btn btn-primary btn-block mb-4 mr-2" value="" disabled>
                                                     活动{{status}}
                                                 </button>

@@ -284,6 +284,7 @@
                                                                 {% endif %}
                                                                 {% if appoint_longterm.status != "已取消" and appoint_longterm.status != "未通过" %}
                                                                     <form action="cancelAppoint" method="POST" onsubmit="return confirm('确定取消对{{ appoint_longterm.appoint.Rtitle }}的长期预约?所有未开始的预约都将失效!')">
+                                                                        {% csrf_token %}
                                                                         <input type="hidden" name="type" value="longterm"/>
                                                                         <button type="submit"
                                                                                 class="btn btn-sm bg-danger-light mt-3"
@@ -347,6 +348,7 @@
                                                         </div>
                                                         {% if appoint.can_cancel %}
                                                             <form action="cancelAppoint" method="POST" onsubmit="return confirm('确定取消对{{ appoint.Rtitle }}的预约?')">
+                                                                {% csrf_token %}
                                                                 <div class="appointment-action">
                                                                     <input type="hidden" name="type" value="appoint"/>
                                                                     <button type="submit" class="btn btn-sm bg-danger-light" name="cancel_id" value="{{ appoint.Aid }}">
@@ -436,6 +438,7 @@
                                                         <div>
                                                             {% if appoint.Astatus == '违约' %}
                                                                 <form method="POST">
+                                                                {% csrf_token %}
                                                                     <div class="appointment-action">
                                                                         <button type="submit" class="btn btn-sm bg-danger-light"
                                                                             name="feedback" value="{{appoint.Aid}}">

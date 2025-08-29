@@ -309,6 +309,7 @@
               <div class="col-12 collapse mb-4 pt-2 order-last collapsed form-group collapse show" id="collapseExample"
                 style="background-color: var(--search-book-bg);  border-bottom-left-radius: 6px; border-bottom-right-radius: 6px;">
                 <form action="/yplibrary/search/" method="POST" role="search" id="SearchBookForm">
+                  {% csrf_token %}
                   <div class="row">
                     <div class="col-12 input-group pt-4 pb-3">
                       <input type="text" class="form-control" id="keywords" placeholder="搜索书名/作者/索书号/出版社"

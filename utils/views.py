@@ -264,11 +264,8 @@ class SecureTemplateView(SecureView):
 
     模板渲染：
     - template_name对应模板的文件名，继承类必须设置这个属性
-    - get_context_data()用于获取模板所需的context
-    - extra_context作为get_context_data()的补充，在处理请求的过程中可以随时向其中添加内容
     """
     template_name: str
-    extra_context: dict[str, Any]
     response_class = TemplateResponse
 
     def setup(self, request: HttpRequest, *args: Any, **kwargs: Any) -> None:
@@ -289,14 +286,10 @@ class SecureTemplateView(SecureView):
             )
         return [self.template_name]
 
-    def get_context_data(self, **kwargs) -> dict[str, Any]:
-        return self.extra_context | kwargs
-
     def render(self, **kwargs: Any):
         response = self.response_class(
             request=self.request,
             template=self.get_template_names(),
-            context=self.get_context_data(**kwargs),
         )
         # 实时加载模板，便于捕获模板错误
         response.render()

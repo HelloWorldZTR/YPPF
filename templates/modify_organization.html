@@ -75,6 +75,7 @@
                                     <!--  BEGIN CONTENT AREA  -->
                                     <div class="widget-content widget-content-area">
                                         <form role="form" method="POST" enctype="multipart/form-data">
+                                        {% csrf_token %}
                                             
                                             {%if not is_new_application %}
                                                     <div class="form-group">

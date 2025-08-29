@@ -72,6 +72,7 @@
 
                                 <form role="form" method="POST" enctype="multipart/form-data"
                                     onsubmit="return check_inputs()">
+                                    {% csrf_token %}
 
                                     <div class="form-group">
                                         <label>课程名称</label>

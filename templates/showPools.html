@@ -378,6 +378,7 @@
                                     {% endfor %}
                                 </div>
                                 <form action="" method="POST" class="invisible" id="getLotteryForm">
+                                {% csrf_token %}
                                 </form>
                                 <div class="col-sm-12 col-md-6 my-3 mx-auto">
                                     <div class="btn-group btn-group-sm w-100" role="group">
@@ -471,6 +472,7 @@
                                     {% endfor %}
                                 </div>
                                 <form action="" method="POST" class="invisible" id="getRandomForm">
+                                {% csrf_token %}
                                 </form>
                                 <div class="col-sm-12 col-md-6 my-3 mx-auto">
                                     <div class="btn-group btn-group-sm w-100" role="group">
@@ -552,6 +554,7 @@
                                         <i class="fas fa-fw fa-ticket-alt"></i> 已兑换次数：{{ item.my_exchange_time }} / {{ item.exchange_limit }} 次
                                     </p>
                                     <form action="" method="POST" id="getExchangeForm{{ item.id }}">
+                                    {% csrf_token %}
                                         <input type="hidden" name="pool_id" value="{{ pool.id }}">
                                         {% for attribute in item.exchange_attributes %}
                                         <div style="display: inline-block;">
