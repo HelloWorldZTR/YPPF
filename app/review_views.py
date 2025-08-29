@@ -1,4 +1,4 @@
-from app.models import ReviewCategories, CourseReview, Course
+from app.models import ReviewCategories, CourseReview, Course, ReviewReaction
 from app.views_dependency import *
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
@@ -154,9 +154,8 @@ class CourseReviewsAPIView(APIView):
             # No reviews found
             return Response({"reviews": []})
         
-        serializer = CourseReviewListSerializer(paginated_reviews, many=True)
+        serializer = CourseReviewListSerializer(paginated_reviews, many=True, context={'request': request})
         return Response({"reviews": serializer.data})
-
 
 @login_required(redirect_field_name="origin")
 @utils.check_user_access(redirect_url="/logout/")
@@ -221,3 +220,42 @@ def postReview(request):
         return render(request, "review/postReview.html", vars)
     else:
         return redirect("welcome")
+    
+
+class reviewLikeAPI(APIView):
+    """处理课程评价的点赞和点踩"""
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        review_id = request.data.get("review_id")
+        action = request.data.get("action")  # 'like' or 'dislike'
+
+        if not review_id or action not in ['like', 'dislike']:
+            return Response({"error": "缺少参数或参数错误"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            review = CourseReview.objects.get(id=review_id)
+        except CourseReview.DoesNotExist:
+            return Response({"error": "评价不存在"}, status=status.HTTP_400_BAD_REQUEST)
+
+        user = request.user
+
+        if action == 'like':
+            ReviewReaction.objects.update_or_create(
+                user=user, review=review,
+                defaults={'reaction': ReviewReaction.ReactionType.LIKE}
+            )
+        else:  # action == 'dislike'
+            ReviewReaction.objects.update_or_create(
+                user=user, review=review,
+                defaults={'reaction': ReviewReaction.ReactionType.DISLIKE}
+            )
+        
+        data = {
+            'likes': review.reactions.filter(reaction=ReviewReaction.ReactionType.LIKE).count(),
+            'dislikes': review.reactions.filter(reaction=ReviewReaction.ReactionType.DISLIKE).count(),
+            'liked': ReviewReaction.objects.filter(user=user, review=review, reaction=ReviewReaction.ReactionType.LIKE).exists(),
+            'disliked': ReviewReaction.objects.filter(user=user, review=review, reaction=ReviewReaction.ReactionType.DISLIKE).exists()
+        }
+
+        return Response(data)

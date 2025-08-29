@@ -2006,7 +2006,8 @@ class CourseReview(models.Model):
         verbose_name = "4. 课程测评"
         verbose_name_plural = verbose_name
         ordering = ["-time"]
-    
+    id = models.AutoField(primary_key=True)
+
     course = models.ForeignKey(ReviewCategories, on_delete=models.CASCADE, verbose_name="测评课程")
     time = models.DateTimeField("评论时间", auto_now_add=True)
     reviewer = models.ForeignKey(
@@ -2033,7 +2034,16 @@ class CourseReview(models.Model):
     text = models.TextField("详细评价", default="", blank=False)
 
     anonymous_flag = models.BooleanField("是否匿名", default=False)
-    likes = models.IntegerField("点赞数", default=0)
-    dislikes = models.IntegerField("点踩数", default=0)
-    liked_users = models.ManyToManyField(User, related_name="liked_reviews", blank=True)
-    # like 和 dislike 的人都用liked_users来存储
+
+    visibility = models.BooleanField("是否可见", default=True) # Use to censor
+
+class ReviewReaction(models.Model):
+    class Meta:
+        unique_together = ('user', 'review')
+    class ReactionType(models.IntegerChoices):
+        LIKE = (0, "点赞")
+        DISLIKE = (1, "点踩")
+    user = models.ForeignKey(User,related_name="reactions",on_delete=models.CASCADE, verbose_name="用户")
+    review = models.ForeignKey(CourseReview, related_name="reactions",on_delete=models.CASCADE, verbose_name="测评")
+    reaction = models.SmallIntegerField("类型", choices=ReactionType.choices)
+    created_at = models.DateTimeField("创建时间", auto_now_add=True)

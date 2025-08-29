@@ -59,7 +59,7 @@ ROOT_CONFIG = _init_config()
 
 
 class GlobalConfig(Config):
-    base_url = LazySetting('base_url', default='http://localhost:8000')
+    base_url = LazySetting('base_url', default='http://127.0.0.1:8000')
     salt = LazySetting('hash_salt', default='salt')
     hasher = LazySetting(salt, MySHA256Hasher, type=MySHA256Hasher)
     temporary_dir = LazySetting('tmp_dir', default='tmp')

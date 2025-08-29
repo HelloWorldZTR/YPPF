@@ -1,7 +1,8 @@
 from rest_framework import serializers
 from rest_framework.pagination import PageNumberPagination
 from django.core.exceptions import ValidationError as DjangoValidationError
-from .models import CourseReview, ReviewCategories, User
+from .models import CourseReview, ReviewCategories, NaturalPerson, ReviewReaction
+from app.utils import get_classified_user
 
 class CourseReviewSerializer(serializers.ModelSerializer):
     """
@@ -189,26 +190,58 @@ def get_course_data_for_frontend():
 
 class CourseReviewListSerializer(serializers.ModelSerializer):
     reviewer = serializers.SerializerMethodField()
+    reviewer_avatar = serializers.SerializerMethodField()
     semester = serializers.SerializerMethodField()
     time = serializers.SerializerMethodField()
+    likes = serializers.SerializerMethodField()
+    dislikes = serializers.SerializerMethodField()
+    liked = serializers.SerializerMethodField()
+    disliked = serializers.SerializerMethodField()
 
     class Meta:
         model = CourseReview
         fields = [
-            'reviewer', 'title', 'text', 'rating_recommend', 
+            'id',
+            'reviewer','reviewer_avatar', 'title', 'text', 'rating_recommend', 
             'rating_content', 'rating_workload', 'rating_grade',
-            'time', 'semester', 'teacher', 'likes', 'dislikes'
+            'time', 'semester', 'teacher', 'likes', 'dislikes',
+            'liked', 'disliked'
         ]
 
     def get_reviewer(self, obj):
         return obj.reviewer.get_username() if not obj.anonymous_flag else "匿名用户"
 
+    def get_reviewer_avatar(self, obj):
+        try:
+            classified_user = get_classified_user(obj.reviewer)
+            return classified_user.get_user_ava() if not obj.anonymous_flag else NaturalPerson.get_user_ava()
+        except AssertionError: # if not person or org
+            return NaturalPerson.get_user_ava() # Use default avatar
+        
     def get_semester(self, obj):
         semester_num = 1 if obj.semester == 'Spring' else 2
         return f"{obj.school_year}-{obj.school_year + 1}-{semester_num}"
 
     def get_time(self, obj):
         return obj.time.strftime("%Y-%m-%d")
+    
+    def get_likes(self, obj):
+        return obj.reactions.filter(reaction=ReviewReaction.ReactionType.LIKE).count()
+
+    def get_dislikes(self, obj):
+        return obj.reactions.filter(reaction=ReviewReaction.ReactionType.DISLIKE).count()
+
+    def get_liked(self, obj):
+        request = self.context.get("request")
+        if request and request.user.is_authenticated:
+            return obj.reactions.filter(user=request.user, reaction=ReviewReaction.ReactionType.LIKE).exists()
+        return False
+
+    def get_disliked(self, obj):
+        request = self.context.get("request")
+        if request and request.user.is_authenticated:
+            return obj.reactions.filter(user=request.user, reaction=ReviewReaction.ReactionType.DISLIKE).exists()
+        return False
 
 class CourseReviewPagination(PageNumberPagination):
     page_size = 5

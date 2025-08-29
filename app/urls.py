@@ -94,6 +94,7 @@ urlpatterns = [
      path("getCourseInfo/", review_views.CourseInfoAPIView.as_view(), name="getCourseInfo"),
      path("getCourseReviews/", review_views.CourseReviewsAPIView.as_view(), name="getCourseReviews"),
      path("postReview/", review_views.postReview, name="postReview"),
+     path("likeReview/", review_views.reviewLikeAPI.as_view(), name="likeReview"),
     # 数据导出
     path("outputRecord/", course_views.outputRecord, name="outputRecord"),
     path("outputSelectInfo/", course_views.outputSelectInfo,

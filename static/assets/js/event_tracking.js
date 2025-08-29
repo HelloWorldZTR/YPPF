@@ -13,6 +13,10 @@
 // 所以在数据库中新增了 设备类型 和 浏览器 的相关信息(Platform ExploreName ExploreVer三个字段)
 // 如果分析数据需要用到PD，可以排除用 这些设备+浏览器 所得到的记录（如果它们不是很多的话）。因为这类设备上只记录了PV
 
+function getCSRFToken() {
+return document.querySelector('[name=csrf-token]').content;
+}
+
 function getExplore(){
     var Sys = {};  
     var ua = navigator.userAgent.toLowerCase();  
@@ -42,6 +46,7 @@ function PageTrackFunction(type){
         type: 'POST',
         url: "/eventTrackingFunc/", // be mindful of url names
         data: {
+            'csrfmiddlewaretoken': getCSRFToken(),
             'Time': myDate.getTime(),
             'Url': window.location.pathname,
             'Type': type, // models.PageLog.PV(type=0) or PD(type=1)
@@ -62,6 +67,7 @@ function ModuleTrackFunction(type, name){
         type: 'POST',
         url: "/eventTrackingFunc/", // be mindful of url names
         data: {
+            'csrfmiddlewaretoken': getCSRFToken(),
             'Time': myDate.getTime(),
             'Url': window.location.pathname,
             'Name': name,

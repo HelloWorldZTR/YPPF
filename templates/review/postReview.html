@@ -12,6 +12,9 @@
                 <div class="card h-100">
                     <div class="card-header d-flex align-items-center justify-content-between">
                         <h5 class="mb-0" id="detail-title">发布测评</h5>
+                        <span class="btn btn-sm btn-primary" onclick="returnOverview()">
+                            <i class="fas fa-reply-all"></i>
+                        </span>
                     </div>
                     <div class="card-body">
                         <form id="review-form" method="post">
@@ -131,12 +134,11 @@
 </div>
 <!--  END CONTENT AREA  -->
 <script>
-  /* 假数据 */
-//   const DATA = {{ json_data|safe }};
-    const DATA = [
-        {id: 1, name: "元神学概论", category:"德"},
-        {id: 2, name: "马克思主义基本原理概论", category:"德"},
-    ]
+    const DATA = {{ json_data|safe }};
+    // const DATA = [
+    //     {id: 1, name: "元神学概论", category:"德"},
+    //     {id: 2, name: "马克思主义基本原理概论", category:"德"},
+    // ]
     // Get param from url
     const selected_id = new URLSearchParams(window.location.search).get('course_id') || 1;
 
@@ -228,6 +230,15 @@
         }
         
         return true;
+    }
+
+    function returnOverview() {
+        const courseId = document.getElementById('course-select').value;
+        if (courseId) {
+            window.location.href = `{% url 'coursesOverview' %}?id=${courseId}`;
+        } else {
+            window.location.href = `{% url 'coursesOverview' %}`;
+        }
     }
 </script>
 <style>
