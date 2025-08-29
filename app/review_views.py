@@ -222,7 +222,7 @@ def postReview(request):
         return redirect("welcome")
     
 
-class reviewLikeAPI(APIView):
+class ReviewLikeAPI(APIView):
     """处理课程评价的点赞和点踩"""
     permission_classes = [IsAuthenticated]
 
