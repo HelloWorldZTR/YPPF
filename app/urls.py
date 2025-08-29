@@ -91,8 +91,9 @@ urlpatterns = [
          name="showCourseRecord"),
      #课程评价
      path("coursesReview/", review_views.coursesOverview, name="coursesOverview"),
-     path("getCourseInfo/", review_views.getCourseInfo, name="getCourseInfo"),
-     path("getCourseReviews/", review_views.getCourseReviews, name="getCourseReviews"),
+     path("getCourseInfo/", review_views.CourseInfoAPIView.as_view(), name="getCourseInfo"),
+     path("getCourseReviews/", review_views.CourseReviewsAPIView.as_view(), name="getCourseReviews"),
+     path("postReview/", review_views.postReview, name="postReview"),
     # 数据导出
     path("outputRecord/", course_views.outputRecord, name="outputRecord"),
     path("outputSelectInfo/", course_views.outputSelectInfo,

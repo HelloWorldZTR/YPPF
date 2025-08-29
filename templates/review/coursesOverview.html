@@ -2,11 +2,7 @@
 {% block mainpage %}
 <!--  BEGIN CONTENT AREA  -->
 <div id="content" class="main-content pb-3" style="overflow: hidden;">
-  {% if html_display.warn_code == 2 %}
-  <div class="alert alert-success text-center mb-0">{{ html_display.warn_message }}</div>
-  {% elif html_display.warn_code == 1 %}
-  <div class="alert alert-warning text-center mb-0">{{ html_display.warn_message }}</div>
-  {% endif %}
+  <div id="msg-box" class="alert alert-success text-center mb-0" style="display: none;"></div>
   <div class="container py-4" id="course-eval-app">
     <div class="row g-4">
       <!-- 左侧综述 -->
@@ -106,7 +102,12 @@
         <div class="card h-100">
           <div class="card-header d-flex align-items-center justify-content-between">
             <h5 class="mb-0" id="detail-title">请选择课程</h5>
-            <span class="badge badge-primary" id="detail-category"></span>
+            <div class="operations">
+              <span class="badge badge-primary" id="post-btn" onclick="postReview()">
+                <i class="fas fa-pen"></i>
+              </span>
+              <span class="badge badge-primary" id="detail-category"></span>
+            </div>
           </div>
           <div class="card-body">
             <div id="detail-placeholder" class="text-muted">在左侧选择一个课程以查看评价详情。</div>
@@ -171,7 +172,12 @@
               <hr>
               <!-- 用户评价列表 -->
               <div>
-                <h6 class="font-weight-bold mb-3">用户评价</h6>
+                <div class="d-flex align-items-center justify-content-between">
+                  <h6 class="font-weight-bold mb-3">用户评价</h6>
+                  <button class="btn btn-outline-primary btn-sm mb-3" id="post-btn" onclick="postReview()">
+                    <i class="fas fa-pen"></i>发表评价
+                  </button>
+                </div>
                 <div id="reviews-list">
                   <!-- 动态生成评价列表 -->
                 </div>
@@ -398,9 +404,18 @@
     element.textContent = currentCount + 1;
   }
 
-  // 默认选择第一门课
-  const firstCourse = DATA[0]?.courses[0]?.id;
-  if (firstCourse) document.addEventListener('DOMContentLoaded', () => selectCourse(firstCourse));
+  // 如果给定了id，则使用，否则选择第一门课
+  const id = new URLSearchParams(window.location.search).get('id') || 1;
+  document.addEventListener('DOMContentLoaded', () => selectCourse(id));
+
+  // 如果给定了msg，则显示成功信息
+  const msg = new URLSearchParams(window.location.search).get('msg');
+  if (msg) {
+    const msgbox = document.getElementById("msg-box");
+    msgbox.textContent = msg;
+    msgbox.style.display = "block";
+    setTimeout(() => { msgbox.style.display = "none"; }, 5000);
+  }
 </script>
 <script>
   // Pagination variables
@@ -507,6 +522,14 @@
     }
     console.log(data.reviews);
     updateReviewsList(data.reviews);
+  }
+  function postReview() {
+    const courseId = document.querySelector('.list-select-course.active')?.dataset.courseId;
+    if (!courseId) {
+      alert('请先选择一门课程再发表评价。');
+      return;
+    }
+    window.location.href = `{% url 'postReview' %}?course_id=${courseId}`;
   }
 </script>
   <style>

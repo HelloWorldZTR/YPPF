@@ -1,0 +1,296 @@
+{% extends "base.html" %}
+{% block mainpage %}
+    <!--  BEGIN CONTENT AREA  -->
+    <div id="content" class="main-content pb-3" style="overflow: hidden;">
+        {% if html_display.warn_code == 2 %}
+            <div class="alert alert-success text-center mb-0">{{ html_display.warn_message }}</div>
+        {% elif html_display.warn_code == 1 %}
+            <div class="alert alert-warning text-center mb-0">{{ html_display.warn_message }}</div>
+        {% endif %}
+        <div class="container py-4" id="course-eval-app">
+            <div class="col-12">
+                <div class="card h-100">
+                    <div class="card-header d-flex align-items-center justify-content-between">
+                        <h5 class="mb-0" id="detail-title">发布测评</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="review-form" method="post">
+                            {% csrf_token %}
+                            <!-- Course Selection -->
+                            <div class="mb-4">
+                                <label for="course-select" class="form-label fw-bold">选择课程 *</label>
+                                <select class="form-select" id="course-select" name="course" required>
+                                    <option value="">请选择课程</option>
+                                </select>
+                            </div>
+                            <!-- Teacher -->
+                            <div class="mb-4">
+                                <label for="teacher" class="form-label fw-bold">授课教师</label>
+                                <input type="text"
+                                       class="form-control"
+                                       id="teacher"
+                                       name="teacher"
+                                       placeholder="请输入授课教师姓名（可选）">
+                            </div>
+                            <!-- Title -->
+                            <div class="mb-4">
+                                <label for="title" class="form-label fw-bold">测评标题 *</label>
+                                <input type="text"
+                                       class="form-control"
+                                       id="title"
+                                       name="title"
+                                       maxlength="100"
+                                       required
+                                       placeholder="请输入测评标题">
+                            </div>
+                            <!-- Review Text -->
+                            <div class="mb-4">
+                                <label for="text" class="form-label fw-bold">详细评价 *</label>
+                                <textarea class="form-control"
+                                          id="text"
+                                          name="text"
+                                          rows="6"
+                                          required
+                                          placeholder="请详细描述您对这门课程的评价..."></textarea>
+                            </div>
+                            <!-- Ratings Section -->
+                            <div class="mb-4">
+                                <h6 class="fw-bold mb-3">评分 *</h6>
+                                <div class="row">
+                                    <!-- Overall Rating -->
+                                    <div class="col-6 col-md-3 mb-2">
+                                        <label class="form-label">总体评价</label>
+                                        <div class="star-rating" data-rating="rating_recommend">
+                                            <span class="star" data-value="1">★</span>
+                                            <span class="star" data-value="2">★</span>
+                                            <span class="star" data-value="3">★</span>
+                                            <span class="star" data-value="4">★</span>
+                                            <span class="star" data-value="5">★</span>
+                                        </div>
+                                        <input type="hidden" name="rating_recommend" id="rating_recommend" value="5">
+                                    </div>
+                                    <!-- Content Quality -->
+                                    <div class="col-6 col-md-3 mb-2">
+                                        <label class="form-label">内容质量</label>
+                                        <div class="star-rating" data-rating="rating_content">
+                                            <span class="star" data-value="1">★</span>
+                                            <span class="star" data-value="2">★</span>
+                                            <span class="star" data-value="3">★</span>
+                                            <span class="star" data-value="4">★</span>
+                                            <span class="star" data-value="5">★</span>
+                                        </div>
+                                        <input type="hidden" name="rating_content" id="rating_content" value="5">
+                                    </div>
+                                    <!-- Workload -->
+                                    <div class="col-6 col-md-3 mb-2">
+                                        <label class="form-label">工作量</label>
+                                        <div class="star-rating" data-rating="rating_workload">
+                                            <span class="star" data-value="1">★</span>
+                                            <span class="star" data-value="2">★</span>
+                                            <span class="star" data-value="3">★</span>
+                                            <span class="star" data-value="4">★</span>
+                                            <span class="star" data-value="5">★</span>
+                                        </div>
+                                        <input type="hidden" name="rating_workload" id="rating_workload" value="5">
+                                    </div>
+                                    <!-- Grade -->
+                                    <div class="col-6 col-md-3 mb-2">
+                                        <label class="form-label">考核</label>
+                                        <div class="star-rating" data-rating="rating_grade">
+                                            <span class="star" data-value="1">★</span>
+                                            <span class="star" data-value="2">★</span>
+                                            <span class="star" data-value="3">★</span>
+                                            <span class="star" data-value="4">★</span>
+                                            <span class="star" data-value="5">★</span>
+                                        </div>
+                                        <input type="hidden" name="rating_grade" id="rating_grade" value="5">
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Anonymous Option -->
+                            <div class="mb-4">
+                                <div class="form-check">
+                                    <input class="form-check-input"
+                                           type="checkbox"
+                                           id="anonymous_flag"
+                                           name="anonymous_flag">
+                                    <label class="form-check-label" for="anonymous_flag">匿名发布</label>
+                                </div>
+                            </div>
+                            <!-- Submit Button -->
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary btn-lg">发布测评</button>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="card-footer small text-muted">请注意文明上网，理性发言</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!--  END CONTENT AREA  -->
+<script>
+  /* 假数据 */
+//   const DATA = {{ json_data|safe }};
+    const DATA = [
+        {id: 1, name: "元神学概论", category:"德"},
+        {id: 2, name: "马克思主义基本原理概论", category:"德"},
+    ]
+    // Get param from url
+    const selected_id = new URLSearchParams(window.location.search).get('course_id') || 1;
+
+    // Populate course dropdown
+    document.addEventListener('DOMContentLoaded', function() {
+        const courseSelect = document.getElementById('course-select');
+        
+        DATA.forEach(course => {
+            const option = document.createElement('option');
+            option.value = course.id;
+            option.textContent = `${course.name} (${course.category})`;
+            if (course.id == selected_id) {
+                option.selected = true;
+            }
+            courseSelect.appendChild(option);
+        });
+
+        // Initialize star ratings
+        initializeStarRatings();
+        
+        // Form submission
+        document.getElementById('review-form').addEventListener('submit', function(e) {
+            if (!validateForm()) {
+                e.preventDefault();
+            }
+        });
+    });
+
+    function initializeStarRatings() {
+        const starRatings = document.querySelectorAll('.star-rating');
+        
+        starRatings.forEach(rating => {
+            const ratingName = rating.getAttribute('data-rating');
+            const stars = rating.querySelectorAll('.star');
+            const hiddenInput = document.getElementById(ratingName);
+            
+            // Set initial state (all ratings default to 5)
+            updateStarDisplay(stars, 5);
+            
+            stars.forEach(star => {
+                star.addEventListener('click', function() {
+                    const value = parseInt(this.getAttribute('data-value'));
+                    hiddenInput.value = value;
+                    updateStarDisplay(stars, value);
+                });
+                
+                star.addEventListener('mouseover', function() {
+                    const value = parseInt(this.getAttribute('data-value'));
+                    updateStarDisplay(stars, value, true);
+                });
+            });
+            
+            rating.addEventListener('mouseleave', function() {
+                const currentValue = parseInt(hiddenInput.value);
+                updateStarDisplay(stars, currentValue);
+            });
+        });
+    }
+
+    function updateStarDisplay(stars, value, isHover = false) {
+        stars.forEach((star, index) => {
+            const starValue = index + 1;
+            star.classList.remove('filled', 'hover');
+            
+            if (starValue <= value) {
+                star.classList.add(isHover ? 'hover' : 'filled');
+            }
+        });
+    }
+
+    function validateForm() {
+        const course = document.getElementById('course-select').value;
+        const title = document.getElementById('title').value.trim();
+        const text = document.getElementById('text').value.trim();
+        
+        if (!course) {
+            alert('请选择课程');
+            return false;
+        }
+        
+        if (!title) {
+            alert('请输入测评标题');
+            return false;
+        }
+        
+        if (!text) {
+            alert('请输入详细评价');
+            return false;
+        }
+        
+        return true;
+    }
+</script>
+<style>
+    #course-eval-app .list-group-item.active {transition: background-color .15s; }
+    #course-eval-app .list-group-item .badge {min-width: 2.2rem; }
+    #course-eval-app .progress {
+      background-color: #e9ecef;
+      border-radius: 10px;
+    }
+    #course-eval-app .progress-bar {
+      border-radius: 10px;
+    }
+    #course-eval-app .card-title {font-size: 1rem; }
+    #course-eval-app .shadow-sm {box-shadow: 0 .125rem .25rem rgba(0,0,0,.075)!important; }
+    #course-eval-app .bg-light {background-color: #f8f9fa!important; }
+    .border {border: 1px solid #dee2e6!important; }
+    .rounded {border-radius: 0.25rem!important; }
+    
+    /* Star Rating Styles */
+    .star-rating {
+        display: flex;
+        gap: 2px;
+        margin-top: 5px;
+    }
+    
+    .star {
+        font-size: 1.5rem;
+        color: #ddd;
+        cursor: pointer;
+        transition: color 0.2s ease;
+        user-select: none;
+    }
+    
+    .star.filled {
+        color: #ffc107;
+    }
+    
+    .star.hover {
+        color: #ffcd39;
+    }
+    
+    .star:hover {
+        color: #ffcd39;
+    }
+    
+    /* Form Styles */
+    .form-label.fw-bold {
+        font-weight: 600 !important;
+    }
+    
+    .form-control:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+    }
+    
+    .btn-primary {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+    }
+    
+    .btn-primary:hover {
+        background-color: #0b5ed7;
+        border-color: #0a58ca;
+    }
+</style>
+{% endblock %}
