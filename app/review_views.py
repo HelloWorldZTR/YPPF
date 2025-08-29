@@ -119,7 +119,7 @@ class CourseInfoAPIView(APIView):
         return Response(serializer.data)
 
 class CourseReviewsAPIView(APIView):
-    """返回课程的评价列表"""
+    """返回课程的评价列表(只有visibility为true的 也就是没被封禁的)"""
     queryset = CourseReview.objects.all()
     permission_classes = [IsAuthenticated]
     
@@ -128,7 +128,7 @@ class CourseReviewsAPIView(APIView):
         if courseID:
             try:
                 course = ReviewCategories.objects.get(id=courseID)
-                return CourseReview.objects.filter(course=course).order_by('-time')
+                return CourseReview.objects.filter(course=course, visibility=True).order_by('-time')
             except ReviewCategories.DoesNotExist:
                 return CourseReview.objects.none()
         return CourseReview.objects.none()
@@ -153,9 +153,44 @@ class CourseReviewsAPIView(APIView):
         if paginated_reviews is None:
             # No reviews found
             return Response({"reviews": []})
+        totalPages = paginator.page.paginator.num_pages
+
+        serializer = CourseReviewListSerializer(paginated_reviews, many=True, context={'request': request})
+        return Response({"reviews": serializer.data, "totalPages": totalPages})
+
+class MyCourseReviewsAPIView(APIView):
+    """返回用户自己发布的课程评价列表(包括被封禁的)"""
+    queryset = CourseReview.objects.all()
+    permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        user = self.request.user
+        return CourseReview.objects.filter(reviewer=user).order_by('-time')
+    
+    def get(self, request):
+        reviews = self.get_queryset()
+        
+        # Use DRF pagination
+        paginator = CourseReviewPagination()
+        paginated_reviews = paginator.paginate_queryset(reviews, request)
+        
+        if paginated_reviews is None:
+            # No reviews found
+            return Response({"reviews": []})
+        
+        totalPages = paginator.page.paginator.num_pages
         
         serializer = CourseReviewListSerializer(paginated_reviews, many=True, context={'request': request})
-        return Response({"reviews": serializer.data})
+        return Response({"reviews": serializer.data, "totalPages": totalPages})
+
+@login_required(redirect_field_name="origin")
+@utils.check_user_access(redirect_url="/logout/")
+@logger.secure_view()
+def myReview(request):
+    bar_display = utils.get_sidebar_and_navbar(
+        request.user, navbar_name="课程测评", title_name="我的测评"
+    )
+    return render(request, "review/myReview.html", {"bar_display": bar_display})
 
 @login_required(redirect_field_name="origin")
 @utils.check_user_access(redirect_url="/logout/")

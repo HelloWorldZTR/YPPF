@@ -205,7 +205,8 @@ class CourseReviewListSerializer(serializers.ModelSerializer):
             'reviewer','reviewer_avatar', 'title', 'text', 'rating_recommend', 
             'rating_content', 'rating_workload', 'rating_grade',
             'time', 'semester', 'teacher', 'likes', 'dislikes',
-            'liked', 'disliked'
+            'liked', 'disliked',
+            'visibility'
         ]
 
     def get_reviewer(self, obj):

@@ -91,10 +91,12 @@ urlpatterns = [
          name="showCourseRecord"),
      #课程评价
      path("coursesReview/", review_views.coursesOverview, name="coursesOverview"),
+     path("myReview/", review_views.myReview, name="myReview"),
+     path("postReview/", review_views.postReview, name="postReview"),
      path("getCourseInfo/", review_views.CourseInfoAPIView.as_view(), name="getCourseInfo"),
      path("getCourseReviews/", review_views.CourseReviewsAPIView.as_view(), name="getCourseReviews"),
-     path("postReview/", review_views.postReview, name="postReview"),
      path("likeReview/", review_views.ReviewLikeAPI.as_view(), name="likeReview"),
+     path("getMyReviews/", review_views.MyCourseReviewsAPIView.as_view(), name="getMyReviews"),
     # 数据导出
     path("outputRecord/", course_views.outputRecord, name="outputRecord"),
     path("outputSelectInfo/", course_views.outputSelectInfo,

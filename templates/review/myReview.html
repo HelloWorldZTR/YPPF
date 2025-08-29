@@ -75,6 +75,7 @@ function initialize(){
       dataType: "json",
       async: false,
       success: function(data) {
+        console.log(data);
         totalPages = data.totalPages;
         currentPage = 1;
         if(data.reviews.length === 0){
@@ -93,8 +94,20 @@ function updateReviewsList(reviews) {
 
     reviews.forEach((review, index) => {
       const reviewCard = document.createElement('div');
-      reviewCard.className = 'card mb-3 shadow-sm';
-      reviewCard.innerHTML = `
+      reviewCard.className = `card mb-3 shadow-sm ${!review.visibility ? 'card-hidden' : ''}`;
+      
+      // Add hidden review banner if visibility is false
+      const hiddenBanner = !review.visibility ? `
+        <div class="alert alert-warning mb-0 border-0 rounded-0" style="border-radius: 0.25rem 0.25rem 0 0 !important;">
+          <div class="d-flex align-items-center">
+            <i class="fas fa-eye-slash mr-2"></i>
+            <strong>该评测已被隐藏</strong>
+            <span class="ml-2 text-muted">- 因不符合社区政策而被系统隐藏</span>
+          </div>
+        </div>
+      ` : '';
+      
+      reviewCard.innerHTML = hiddenBanner + `
       <div class="card-body p-3">
         <!-- Reviewer info header -->
         <div class="d-flex justify-content-between align-items-center mb-3">
@@ -109,6 +122,7 @@ function updateReviewsList(reviews) {
               <div class="d-flex align-items-center">
                 <span class="text-muted small mr-2">by ${review.reviewer}</span>
                 <span class="badge badge-secondary badge-pill">${review.semester}</span>
+                ${!review.visibility ? '<span class="badge badge-warning badge-pill ml-2">已隐藏</span>' : ''}
               </div>
             </div>
           </div>
@@ -118,7 +132,7 @@ function updateReviewsList(reviews) {
         <div class="text-muted small mb-2">
           <span class="text-muted">授课教师：${review.teacher}</span>
         </div>
-        <p class="card-text small mb-3">${review.text}</p>
+        <p class="card-text small mb-3 ${!review.visibility ? 'text-muted' : ''}">${review.text}</p>
         
         <!-- 评分图标 - 垂直布局 -->
         <div class="row mb-3">
@@ -155,10 +169,10 @@ function updateReviewsList(reviews) {
         
       reviewCard.innerHTML += `<!-- 点赞点踩按钮 -->
         <div class="d-flex justify-content-end border-top pt-2 mb-2">
-          <button class="btn btn-sm mr-2 btn-outline-success">
+          <button class="btn btn-sm mr-2 btn-outline-success" ${!review.visibility ? 'disabled' : ''}>
             👍 <span id="like-${index}">${review.likes}</span>
           </button>
-          <button class="btn btn-sm mr-2 btn-outline-danger"> 👎 <span id="dislike-${index}">${review.dislikes}</span>
+          <button class="btn btn-sm mr-2 btn-outline-danger" ${!review.visibility ? 'disabled' : ''}> 👎 <span id="dislike-${index}">${review.dislikes}</span>
           </button>
         </div>
       </div>
@@ -315,6 +329,18 @@ document.addEventListener('DOMContentLoaded', initialize);
     #course-eval-app .card {
       border: 1px solid #e3e6f0;
       transition: all 0.15s ease-in-out;
+    }
+    
+    /* Hidden review card styling */
+    #course-eval-app .card-hidden {
+      border: 1px solid #ffc107;
+      background-color: #fffbf0;
+      opacity: 0.85;
+    }
+    
+    #course-eval-app .card-hidden:hover {
+      box-shadow: 0 0.25rem 0.5rem rgba(255, 193, 7, 0.2)!important;
+      transform: translateY(-1px);
     }
     
     #course-eval-app .card:hover {
