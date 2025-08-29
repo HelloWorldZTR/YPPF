@@ -1,6 +1,6 @@
 from typing import Any, final, overload, TypedDict, NoReturn, Callable
 
-from django.views.generic import View
+from django.views.generic import View, TemplateView
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseForbidden, JsonResponse
 from django.core.exceptions import ImproperlyConfigured
 from django.template.response import TemplateResponse
@@ -258,14 +258,17 @@ class SecureView(View):
         return self.response_created(redirect(to, *args, permanent=permanent, **kwargs))
 
 
-class SecureTemplateView(SecureView):
+class SecureTemplateView(SecureView, TemplateView):
     """
     通用的模板视图类：在SecureView的基础上增加了模板渲染功能
 
     模板渲染：
     - template_name对应模板的文件名，继承类必须设置这个属性
+    - get_context_data()用于获取模板所需的context, 支持django自身的contextMixin
+    - extra_context作为get_context_data()的补充，在处理请求的过程中可以随时向其中添加内容
     """
     template_name: str
+    extra_context: dict[str, Any]
     response_class = TemplateResponse
 
     def setup(self, request: HttpRequest, *args: Any, **kwargs: Any) -> None:
@@ -286,10 +289,16 @@ class SecureTemplateView(SecureView):
             )
         return [self.template_name]
 
+    def get_context_data(self, **kwargs) -> dict[str, Any]:
+        context = super().get_context_data()
+        context = context | self.extra_context
+        return context
+
     def render(self, **kwargs: Any):
         response = self.response_class(
             request=self.request,
             template=self.get_template_names(),
+            context=self.get_context_data()
         )
         # 实时加载模板，便于捕获模板错误
         response.render()
