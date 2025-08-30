@@ -7,6 +7,7 @@ from app.review_utils import CourseReviewSerializer, get_course_data_for_fronten
 import json
 from rest_framework import status
 from rest_framework.response import Response
+from django.db import transaction
 
 @login_required(redirect_field_name="origin")
 @utils.check_user_access(redirect_url="/logout/")
@@ -174,12 +175,12 @@ class MyCourseReviewsAPIView(APIView):
         paginator = CourseReviewPagination()
         paginated_reviews = paginator.paginate_queryset(reviews, request)
         
+        totalPages = paginator.page.paginator.num_pages
+
         if paginated_reviews is None:
             # No reviews found
-            return Response({"reviews": []})
-        
-        totalPages = paginator.page.paginator.num_pages
-        
+            return Response({"reviews": [], "totalPages": totalPages})
+
         serializer = CourseReviewListSerializer(paginated_reviews, many=True, context={'request': request})
         return Response({"reviews": serializer.data, "totalPages": totalPages})
 
@@ -302,3 +303,26 @@ class ReviewLikeAPI(APIView):
         }
 
         return Response(data)
+    
+class ReviewDeleteAPI(APIView):
+    """处理用户删除自己的课程评价，逻辑不复杂不用serializer了"""
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        review_id = request.data.get("review_id")
+
+        if not review_id:
+            return Response({"error": "缺少参数"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            review = CourseReview.objects.get(id=review_id, reviewer=request.user)
+        except CourseReview.DoesNotExist:
+            return Response({"error": "评价不存在或无权限删除"}, status=status.HTTP_400_BAD_REQUEST)
+
+        with transaction.atomic():
+            # Delete associated reactions first
+            ReviewReaction.objects.filter(review=review).delete()
+            # Then delete the review itself
+            review.delete()
+
+        return Response({"success": True})
