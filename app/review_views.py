@@ -1,4 +1,4 @@
-from app.models import ReviewCategories, CourseReview, Course, ReviewReaction
+from app.models import ReviewCategories, CourseReview, Course, ReviewReaction, User
 from app.views_dependency import *
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
@@ -185,7 +185,49 @@ class MyCourseReviewsAPIView(APIView):
         return Response({"reviews": serializer.data, "totalPages": totalPages})
 
 class UserCourseReviewsAPIView(APIView):
-    pass
+    """返回指定用户非匿名、非隐藏的所有review"""
+    queryset = CourseReview.objects.all()
+    permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        user_id = self.request.GET.get("id", None)
+        if user_id:
+            try:
+                user = User.objects.get(id=user_id)
+                return CourseReview.objects.filter(
+                    reviewer=user, 
+                    visibility=True, 
+                    anonymous_flag=False
+                ).order_by('-time')
+            except User.DoesNotExist:
+                return CourseReview.objects.none()
+        return CourseReview.objects.none()
+    
+    def get(self, request):
+        user_id = request.GET.get("id", None)
+        
+        if not user_id:
+            return Response({"error": "缺少参数"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            return Response({"error": "用户不存在"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        reviews = self.get_queryset()
+        
+        # Use DRF pagination
+        paginator = CourseReviewPagination()
+        paginated_reviews = paginator.paginate_queryset(reviews, request)
+        
+        if paginated_reviews is None:
+            # No reviews found
+            return Response({"reviews": []})
+        
+        totalPages = paginator.page.paginator.num_pages
+        
+        serializer = CourseReviewListSerializer(paginated_reviews, many=True, context={'request': request})
+        return Response({"reviews": serializer.data, "totalPages": totalPages})
 
 @login_required(redirect_field_name="origin")
 @utils.check_user_access(redirect_url="/logout/")

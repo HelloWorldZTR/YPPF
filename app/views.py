@@ -578,6 +578,16 @@ def stuinfo(request: UserRequest):
             visit_times=F('visit_times')+1)
         
         render_context.update(user=request.user)
+
+        # ------------------ 查看学术地图 ------------------ #
+        person_id = person.get_user().id
+        render_context.update(person_id=person_id)
+        render_context.update(is_myself=is_myself)
+        if is_myself:
+            render_context.update(dispname="你")
+        else: # Ta 他 她
+            render_context.update(dispname=_title)
+        
         return render(request, "stuinfo.html", render_context)
 
 

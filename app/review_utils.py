@@ -6,6 +6,7 @@ from app.utils import get_classified_user
 from datetime import datetime
 
 from django.utils.html import escape
+from django.urls import reverse
 
 class WebSafeModelSerializer(serializers.ModelSerializer):
     """对所有 CharField 和 TextField 自动 HTML 转义"""
@@ -289,17 +290,26 @@ class CourseReviewListSerializer(WebSafeModelSerializer):
     dislikes = serializers.SerializerMethodField()
     liked = serializers.SerializerMethodField()
     disliked = serializers.SerializerMethodField()
+    course = serializers.PrimaryKeyRelatedField(read_only=True)
+    course_name = serializers.CharField(source='course.course_name', read_only=True)
+    course_link = serializers.SerializerMethodField()
 
     class Meta:
         model = CourseReview
         fields = [
             'id',
+            'course', 'course_name', 'course_link',
             'reviewer','reviewer_avatar', 'title', 'text', 'rating_recommend', 
             'rating_content', 'rating_workload', 'rating_grade',
             'time', 'semester', 'teacher', 'likes', 'dislikes',
             'liked', 'disliked',
             'visibility'
         ]
+
+    def get_course_link(self, obj):
+        url = reverse("coursesOverview")
+        url += f"?id={obj.course.id}"
+        return url
 
     def get_reviewer(self, obj):
         return obj.reviewer.get_username() if not obj.anonymous_flag else "匿名用户"

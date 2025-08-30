@@ -132,6 +132,9 @@
         <li class="nav-item">
             <b class="nav-link" data-toggle="pill" role="tab" href="#achievement">{{ context.title }}的成就</b>
         </li>
+        <li class="nav-item">
+            <b class="nav-link" data-toggle="pill" role="tab" href="#reviews">{{ context.title }}的测评</b>
+        </li>
     </ul>
     <!--  END SWITCH TAB  -->
 
@@ -1646,6 +1649,27 @@
             </div>
         </div>
         <!--  END ACHIEVEMENT TAB  -->
+        
+        <!--  BEGIN REVIEW TAB  -->
+        <div class="tab-pane fade" id="reviews" role="tabpanel">
+            <div class="container-fluid layout-px-spacing layout-top-spacing">
+                <div class="bio education layout-spacing">
+                    <div class="widget-content widget-content-area pb-2">
+                        <div id="detail-placeholder" class="text-muted mb-2" style="display: none;">{{ dispname }}还没有发布过课程评测哦🤔</div>
+                        <div id="my-reviews-list">
+                            
+                            <!-- all my reviews goes here-->
+                        </div>
+                        <nav aria-label="评价分页" class="mt-3">
+                            <ul class="pagination justify-content-center" id="pagination-container" style="display: none;">
+                                <!-- Pagination will be dynamically generated -->
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!--  END REVIEW TAB  -->
 
     </div>
     <!--  END CONTENT AREA  -->
@@ -1929,4 +1953,358 @@
 
 </script>
 
+<script>
+console.log("{{ person_id }}");
+console.log("{{ is_myself }}");
+function updateReviewsList(reviews) {
+  const reviewsList = document.getElementById('my-reviews-list');
+  reviewsList.innerHTML = '';
+
+  reviews.forEach((review, index) => {
+    console.log(review);
+    const reviewCard = document.createElement('div');
+    reviewCard.className = `card mb-3 shadow-sm ${!review.visibility ? 'card-hidden' : ''}`;
+    reviewCard.id = `review-card-${review.id}`;
+    
+    // Add hidden review banner if visibility is false
+    const hiddenBanner = !review.visibility ? `
+      <div class="alert alert-warning mb-0 border-0 rounded-0" style="border-radius: 0.25rem 0.25rem 0 0 !important;">
+        <div class="d-flex align-items-center">
+          <i class="fas fa-eye-slash mr-2"></i>
+          <strong>该评测已被隐藏</strong>
+          <span class="ml-2 text-muted">- 因不符合社区政策而被系统隐藏</span>
+        </div>
+      </div>
+    ` : '';
+    
+    reviewCard.innerHTML = hiddenBanner + `
+    <div class="card-body p-3">
+      <!-- Reviewer info header -->
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="d-flex align-items-center">
+          <div class="reviewer-avatar mr-3">
+            <div class="avatar-circle align-items-center justify-content-center bg-light">
+              <img src="${review.reviewer_avatar}" alt="${review.reviewer}" class="img-fluid rounded-circle">
+            </div>
+          </div>
+          <div>
+            <h6 class="card-title mb-1 text-dark">${review.title}</h6>
+            <div class="d-flex align-items-center flex-wrap">
+              <span class="text-muted small mr-2">by ${review.reviewer}</span>
+              <span class="badge badge-secondary badge-pill">${review.semester}</span>
+              <span class="badge badge-info badge-pill ml-2" onclick="location.href='${review.course_link}';">${review.course_name}</span>
+              ${!review.visibility ? '<span class="badge badge-warning badge-pill ml-2">已隐藏</span>' : ''}
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="text-muted small mb-2">
+        <span class="text-muted">授课教师：${review.teacher}</span>
+      </div>
+      <p class="card-text small mb-3 ${!review.visibility ? 'text-muted' : ''}">${review.text}</p>
+      
+      <!-- 评分图标 - 垂直布局 -->
+      <div class="row mb-3">
+        <div class="col-6 col-md-3 mb-2">
+          <div class="text-center p-2 border rounded bg-light">
+            <div class="small text-muted mb-1">推荐指数</div>
+            <div class="h6 mb-1 text-success">${review.rating_recommend}.0</div>
+            <div>${generateStars(review.rating_recommend)}</div>
+          </div>
+        </div>
+        <div class="col-6 col-md-3 mb-2">
+          <div class="text-center p-2 border rounded bg-light">
+            <div class="small text-muted mb-1">内容质量</div>
+            <div class="h6 mb-1 text-info">${review.rating_content}.0</div>
+            <div>${generateStars(review.rating_content)}</div>
+          </div>
+        </div>
+        <div class="col-6 col-md-3 mb-2">
+          <div class="text-center p-2 border rounded bg-light">
+            <div class="small text-muted mb-1">工作量</div>
+            <div class="h6 mb-1 text-warning">${review.rating_workload}.0</div>
+            <div>${generateStars(review.rating_workload)}</div>
+          </div>
+        </div>
+        <div class="col-6 col-md-3 mb-2">
+          <div class="text-center p-2 border rounded bg-light">
+            <div class="small text-muted mb-1">成绩</div>
+            <div class="h6 mb-1 text-primary">${review.rating_grade}.0</div>
+            <div>${generateStars(review.rating_grade)}</div>
+          </div>
+        </div>
+      </div>
+      <div class="row d-flex justify-content-end">
+          <small class="text-muted mr-3">${review.time}</small>
+      </div>
+      `;
+  
+      
+    reviewCard.innerHTML += `<!-- 点赞点踩按钮 -->
+      <div class="d-flex justify-content-between border-top pt-2 mb-2">
+        <div class="ml-2">
+        {% if is_myself %}
+          <button class="btn btn-sm btn-outline-danger" onclick="deleteReview(${review.id})" title="删除评测">
+            <i class="fas fa-trash"></i>
+          </button>
+        {% endif %}
+        </div>
+        <div class="btn-group" role="group" aria-label="Like and Dislike Buttons">
+          <button class="btn btn-sm mr-2 ${review.liked ? 'btn-success' : 'btn-outline-success'} ${!review.visibility ? 'disabled' : ''}" onclick="handleLike(${review.id}, 'like', ${index})">
+            👍 <span id="like-${index}">${review.likes}</span>
+          </button>
+          <button class="btn btn-sm mr-2 ${review.disliked ? 'btn-danger' : 'btn-outline-danger'} ${!review.visibility ? 'disabled' : ''}" onclick="handleLike(${review.id}, 'dislike', ${index})">
+            👎 <span id="dislike-${index}">${review.dislikes}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+    reviewsList.appendChild(reviewCard);
+  });
+}
+
+function generateStars(score) {
+  let stars = '';
+  for (let i = 1; i <= 5; i++) {
+    if (i <= score) {
+      stars += '<span class="text-warning">★</span>';
+    } else {
+      stars += '<span class="text-muted">☆</span>';
+    }
+  }
+  return stars;
+}
+document.addEventListener('DOMContentLoaded', ()=>{changePage(1);});
+
+// Pagination variables
+let currentPage = 1;
+let totalPages = -1; // Make sure this will never equal totalPage, so it will call for a initPagination
+// Initialize pagination
+function initPagination() {
+  // console.log('Total Pages:', totalPages);
+  if (totalPages <= 1) {
+    document.getElementById('pagination-container').style.display = 'none';
+  }
+  else {
+    document.getElementById('pagination-container').style.display = 'flex';
+    renderPagination();
+  }
+}
+function renderPagination() {
+  const container = document.getElementById('pagination-container');
+  if (!container) return;
+  container.innerHTML = '';
+  // Previous button
+  const prevLi = document.createElement('li');
+  prevLi.className = `page-item ${currentPage === 1 ? 'disabled' : ''}`;
+  prevLi.innerHTML = `<a class="page-link" href="javascript:void(0);" onclick="changePage(${currentPage - 1})">上一页</a>`;
+  container.appendChild(prevLi);
+  // Page numbers logic
+  let startPage = 1;
+  let endPage = totalPages;
+  if (totalPages > 7) {
+    if (currentPage <= 4) {
+      // Near beginning
+      startPage = 1;
+      endPage = 5;
+    } else if (currentPage >= totalPages - 3) {
+      // Near end
+      startPage = totalPages - 4;
+      endPage = totalPages;
+    } else {
+      // In middle
+      startPage = currentPage - 2;
+      endPage = currentPage + 2;
+    }
+  }
+  // First page (if not in range)
+  if (startPage > 1) {
+    const firstLi = document.createElement('li');
+    firstLi.className = 'page-item';
+    firstLi.innerHTML = `<a class="page-link" href="javascript:void(0);" onclick="changePage(1)">1</a>`;
+    container.appendChild(firstLi);
+    if (startPage > 2) {
+      const dotsLi = document.createElement('li');
+      dotsLi.className = 'page-item disabled';
+      dotsLi.innerHTML = '<span class="page-link">...</span>';
+      container.appendChild(dotsLi);
+    }
+  }
+  // Page numbers in range
+  for (let i = startPage; i <= endPage; i++) {
+    const pageLi = document.createElement('li');
+    pageLi.className = `page-item ${i === currentPage ? 'active' : ''}`;
+    pageLi.innerHTML = `<a class="page-link" href="javascript:void(0);" onclick="changePage(${i})">${i}</a>`;
+    container.appendChild(pageLi);
+  }
+  // Last page (if not in range)
+  if (endPage < totalPages) {
+    if (endPage < totalPages - 1) {
+      const dotsLi = document.createElement('li');
+      dotsLi.className = 'page-item disabled';
+      dotsLi.innerHTML = '<span class="page-link">...</span>';
+      container.appendChild(dotsLi);
+    }
+    const lastLi = document.createElement('li');
+    lastLi.className = 'page-item';
+    lastLi.innerHTML = `<a class="page-link" href="javascript:void(0);" onclick="changePage(${totalPages})">${totalPages}</a>`;
+    container.appendChild(lastLi);
+  }
+  // Next button
+  const nextLi = document.createElement('li');
+  nextLi.className = `page-item ${currentPage === totalPages ? 'disabled' : ''}`;
+  nextLi.innerHTML = `<a class="page-link" href="javascript:void(0);" onclick="changePage(${currentPage + 1})">下一页</a>`;
+  container.appendChild(nextLi);
+}
+
+function scrollToReviews() {
+  const reviewsHeader = document.querySelector('#reviews-list-header');
+
+  if (reviewsHeader) {
+    reviewsHeader.scrollIntoView({ 
+      behavior: 'smooth', 
+      block: 'start' 
+    });
+  }
+}
+function changePage(page) {
+  $.ajax({
+    {% if is_myself %}
+    url: "{% url 'getMyReviews' %}",
+    {% else %}
+    url: "{% url 'getUserReviews' %}",
+    {% endif %}
+    method: "GET",
+    data: { 
+        page: page,
+        id: {{ person_id }} // no use when the person is me
+    },
+    dataType: "json",
+    success: (data) => {
+      // Hide placeholder if we have reviews
+      if (data.reviews.length == 0) {
+        document.getElementById('detail-placeholder').style.display = 'block';
+        document.getElementById('pagination-container').style.display = 'none';
+      } else {
+        document.getElementById('detail-placeholder').style.display = 'none';
+      }
+
+      // console.log(data.reviews);
+      updateReviewsList(data.reviews);
+      if (currentPage != page) scrollToReviews();
+      currentPage = page;
+      renderPagination();
+      
+      // Update pagination if total pages changed
+      if (data.totalPages !== totalPages) {
+          totalPages = data.totalPages;
+          initPagination();
+      }
+    },
+    error: (data) => {
+      if (page > 1) {
+        // Go to previous page
+        changePage(page - 1);
+        return;
+      } else {
+        // Show placeholder for empty state
+        document.getElementById('detail-placeholder').style.display = 'block';
+        document.getElementById('pagination-container').style.display = 'none';
+        return;
+      }
+    }
+  });
+}
+function deleteReview(id) {
+  const res = confirm("确认要删除该条评测吗？")
+  if (res) {
+    $.ajax({
+      url: "{% url 'deleteReview' %}",
+      method: "POST",
+      data: {
+        review_id: id,
+        csrfmiddlewaretoken: document.querySelector('[name=csrf-token]').content
+      },
+      dataType: "json",
+      success: function(data) {
+        if (data.success) {
+          alert("评测已成功删除");
+          // Reload current page to reflect changes
+          changePage(currentPage);
+        } else if (data.error) {
+          alert("删除失败: " + data.error);
+        }
+      },
+      error: function() {
+        alert("请求失败，请稍后重试");
+      }
+    });
+  }
+}
+
+  function handleLike(reviewId, action, index) {
+    // Send AJAX request to handle like/dislike
+    $.ajax({
+      url: "{% url 'likeReview' %}",
+      method: "POST",
+      data: {
+        'csrfmiddlewaretoken':getCSRFToken(),
+        'review_id': reviewId,
+        'action': action,
+      },
+      dataType: "json",
+      success: function(data) {
+        // Update the UI with new counts and states
+        document.getElementById(`like-${index}`).textContent = data.likes;
+        document.getElementById(`dislike-${index}`).textContent = data.dislikes;
+        
+        // Update button states
+        const likeBtn = document.querySelector(`button[onclick*="'like', ${index}"]`);
+        const dislikeBtn = document.querySelector(`button[onclick*="'dislike', ${index}"]`);
+        
+        // Update like button
+        if (data.liked) {
+          likeBtn.className = 'btn btn-sm btn-success mr-2';
+          likeBtn.disabled = true;
+        } else {
+          likeBtn.className = 'btn btn-sm btn-outline-success mr-2';
+          likeBtn.disabled = false;
+        }
+        
+        // Update dislike button
+        if (data.disliked) {
+          dislikeBtn.className = 'btn btn-sm btn-danger mr-2';
+          dislikeBtn.disabled = true;
+        } else {
+          dislikeBtn.className = 'btn btn-sm btn-outline-danger mr-2';
+          dislikeBtn.disabled = false;
+        }
+      },
+      error: function(xhr, status, error) {
+        console.error('Error handling like/dislike:', error);
+        alert('操作失败，请重试');
+      }
+    });
+  }
+</script>
+<style>
+.border {border: 1px solid #dee2e6!important; }
+.rounded {border - radius: 0.25rem!important; }
+
+/* Avatar styles */
+.reviewer-avatar .avatar-circle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    font-size: 16px;
+    font-weight: 600;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+.card-text {
+    white-space: pre-line;
+}
+</style>
 {% endblock %}

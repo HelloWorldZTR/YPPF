@@ -31,42 +31,7 @@
     </div>
     <!-- END CONTENT AREA -->
     <script>
-    // const reviews = [
-    //     {
-    //         id: 11,
-    //         likes: 1,
-    //         dislikes: 999,
-    //         rating_content: 5,
-    //         rating_grade: 5,
-    //         rating_recommend: 5,
-    //         rating_workload: 5,
-    //         reviewer: "123",
-    //         reviewer_avatar: "/media/avatar/001.png",
-    //         semester: "2023-2024-1",
-    //         teacher: "13",
-    //         text: "1231232222222222222222",
-    //         time: "2025-08-29",
-    //         title: "123123",
-    //         visibility: true
-    //     },
-    //     {
-    //         id: 12,
-    //         likes: 2,
-    //         dislikes: 888,
-    //         rating_content: 5,
-    //         rating_grade: 5,
-    //         rating_recommend: 5,
-    //         rating_workload: 5,
-    //         reviewer: "123",
-    //         reviewer_avatar: "/media/avatar/001.png",
-    //         semester: "2023-2024-1",
-    //         teacher: "13",
-    //         text: "1231232222222222222222",
-    //         time: "2025-08-29",
-    //         title: "123123",
-    //         visibility: false
-    //     }
-    // ]
+      
 function updateReviewsList(reviews) {
   const reviewsList = document.getElementById('my-reviews-list');
   reviewsList.innerHTML = '';
@@ -99,9 +64,10 @@ function updateReviewsList(reviews) {
           </div>
           <div>
             <h6 class="card-title mb-1 text-dark">${review.title}</h6>
-            <div class="d-flex align-items-center">
+            <div class="d-flex align-items-center flex-wrap">
               <span class="text-muted small mr-2">by ${review.reviewer}</span>
               <span class="badge badge-secondary badge-pill">${review.semester}</span>
+              <span class="badge badge-info badge-pill ml-2" onclick="location.href='${review.course_link}';">${review.course_name}</span>
               ${!review.visibility ? '<span class="badge badge-warning badge-pill ml-2">已隐藏</span>' : ''}
             </div>
           </div>
