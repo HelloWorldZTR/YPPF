@@ -675,6 +675,14 @@ class CourseAdmin(admin.ModelAdmin):
         return f'{obj.current_participants}/{"无限" if obj.capacity == 10000 else obj.capacity}'
     participant_diaplay.short_description = "报名情况"
 
+    def _sync_course_with_review(self, course: Course):
+        if ReviewCategories.objects.filter(course_name=course.name).exists():
+            ReviewCategories.objects.get(course_name=course.name).classes.add(course)
+        else:
+            cat = ReviewCategories.objects.create(course_name=course.name, course_type=course.type)
+            cat.classes.add(course)
+
+
     actions = []
 
     @as_action("更新课程状态", actions)
@@ -691,6 +699,12 @@ class CourseAdmin(admin.ModelAdmin):
         register_selection(wait_for=timedelta(minutes=2))
         return self.message_user(request=request,
                                  message='已设置定时任务!')
+    
+    @as_action("和评测系统同步", actions)
+    def sync_with_review_category(self, request, queryset):
+        for course in queryset:
+            self._sync_course_with_review(course)
+        return self.message_user(request=request, message='已同步评测系统!')
 
 
 @admin.register(CourseParticipant)
@@ -764,8 +778,18 @@ class CourseRecordAdmin(admin.ModelAdmin):
 class ReviewAdmin(admin.ModelAdmin):
     list_display = ["title", "reviewer", "course", "time"]
     search_fields = ("title", "reviewer__name", "course")
-    list_filter = ["time"]
+    list_filter = ["time", "visibility", "anonymous_flag"]
     actions = []
+
+    @as_action("设置为隐藏", actions, update=True)
+    def set_hidden(self, request, queryset):
+        queryset.update(visibility=False)
+        return self.message_user(request=request, message='修改成功!')
+
+    @as_action("设置为不隐藏", actions, update=True)
+    def set_not_hidden(self, request, queryset):
+        queryset.update(visibility=True)
+        return self.message_user(request=request, message='修改成功!')
 
 @admin.register(ReviewCategories)
 class ReviewCategoriesAdmin(admin.ModelAdmin):
