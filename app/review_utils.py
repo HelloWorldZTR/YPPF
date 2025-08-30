@@ -192,7 +192,11 @@ class CourseReviewSerializer(WebSafeModelSerializer):
         return value
     
     def validate(self, data):
-        """Cross-field validation for semester and year combination"""
+        """
+        Cross field validation
+        - checks time is not future
+        - checks if the user has aleady posted review        
+        """
         school_year = data.get('school_year')
         semester = data.get('semester')
         
@@ -221,6 +225,11 @@ class CourseReviewSerializer(WebSafeModelSerializer):
             
             if is_future:
                 raise serializers.ValidationError('不能选择未来的学期')
+        
+        user = self.context.get('request').user
+        course = data.get('course')
+        if CourseReview.objects.filter(reviewer=user, course=course).exists():
+            raise serializers.ValidationError('你已经为该课程发布过测评了')
         
         return data
     

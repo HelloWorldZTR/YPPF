@@ -20,7 +20,7 @@
                             <!-- all my reviews goes here-->
                         </div>
                         <nav aria-label="评价分页" class="mt-3">
-                            <ul class="pagination justify-content-center" id="pagination-container">
+                            <ul class="pagination justify-content-center" id="pagination-container" style="display: none;">
                                 <!-- Pagination will be dynamically generated -->
                             </ul>
                         </nav>
@@ -265,12 +265,6 @@ function renderPagination() {
   nextLi.innerHTML = `<a class="page-link" href="javascript:void(0);" onclick="changePage(${currentPage + 1})">下一页</a>`;
   container.appendChild(nextLi);
 }
-function changePage(page) {
-  console.log('Changing to page:', page);
-  currentPage = page;
-  loadPageData(page);
-  renderPagination();
-}
 
 function scrollToReviews() {
   const reviewsHeader = document.querySelector('#reviews-list-header');
@@ -282,7 +276,7 @@ function scrollToReviews() {
     });
   }
 }
-function loadPageData(page) {
+function changePage(page) {
   $.ajax({
     url: "{% url 'getMyReviews' %}",
     method: "GET",
@@ -290,11 +284,18 @@ function loadPageData(page) {
     dataType: "json",
     success: (data) => {
       // Hide placeholder if we have reviews
-      document.getElementById('detail-placeholder').style.display = 'none';
-      
-      console.log(data.reviews);
+      if (data.reviews.length == 0) {
+        document.getElementById('detail-placeholder').style.display = 'block';
+        document.getElementById('pagination-container').style.display = 'none';
+      } else {
+        document.getElementById('detail-placeholder').style.display = 'none';
+      }
+
+      // console.log(data.reviews);
       updateReviewsList(data.reviews);
-      scrollToReviews();
+      if (currentPage != page) scrollToReviews();
+      currentPage = page;
+      renderPagination();
       
       // Update pagination if total pages changed
       if (data.totalPages !== totalPages) {
@@ -331,7 +332,7 @@ function deleteReview(id) {
         if (data.success) {
           alert("评测已成功删除");
           // Reload current page to reflect changes
-          loadPageData(currentPage);
+          changePage(currentPage);
         } else if (data.error) {
           alert("删除失败: " + data.error);
         }

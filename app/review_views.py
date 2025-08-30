@@ -179,10 +179,13 @@ class MyCourseReviewsAPIView(APIView):
 
         if paginated_reviews is None:
             # No reviews found
-            return Response({"reviews": [], "totalPages": totalPages})
+            return Response({"reviews": []})
 
         serializer = CourseReviewListSerializer(paginated_reviews, many=True, context={'request': request})
         return Response({"reviews": serializer.data, "totalPages": totalPages})
+
+class UserCourseReviewsAPIView(APIView):
+    pass
 
 @login_required(redirect_field_name="origin")
 @utils.check_user_access(redirect_url="/logout/")
