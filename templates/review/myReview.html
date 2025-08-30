@@ -11,7 +11,7 @@
             <div class="col-12">
                 <div class="card h-100">
                     <div class="card-header d-flex align-items-center justify-content-between">
-                        <h5 class="mb-0" id="detail-title">我的测评</h5>
+                        <h5 class="mb-0" id="reviews-list-header">我的测评</h5>
                     </div>
                     <div class="card-body">
                         <div id="detail-placeholder" class="text-muted" style="display: none;">你还没有发布过课程评测哦🤔</div>
@@ -187,7 +187,7 @@ document.addEventListener('DOMContentLoaded', ()=>{changePage(1);});
     <script>
 // Pagination variables
 let currentPage = 1;
-let totalPages = 1;
+let totalPages = -1; // Make sure this will never equal totalPage, so it will call for a initPagination
 // Initialize pagination
 function initPagination() {
   // console.log('Total Pages:', totalPages);
@@ -271,6 +271,17 @@ function changePage(page) {
   loadPageData(page);
   renderPagination();
 }
+
+function scrollToReviews() {
+  const reviewsHeader = document.querySelector('#reviews-list-header');
+
+  if (reviewsHeader) {
+    reviewsHeader.scrollIntoView({ 
+      behavior: 'smooth', 
+      block: 'start' 
+    });
+  }
+}
 function loadPageData(page) {
   $.ajax({
     url: "{% url 'getMyReviews' %}",
@@ -283,6 +294,7 @@ function loadPageData(page) {
       
       console.log(data.reviews);
       updateReviewsList(data.reviews);
+      scrollToReviews();
       
       // Update pagination if total pages changed
       if (data.totalPages !== totalPages) {

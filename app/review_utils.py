@@ -5,7 +5,20 @@ from .models import CourseReview, ReviewCategories, NaturalPerson, ReviewReactio
 from app.utils import get_classified_user
 from datetime import datetime
 
-class CourseReviewSerializer(serializers.ModelSerializer):
+from django.utils.html import escape
+
+class WebSafeModelSerializer(serializers.ModelSerializer):
+    """对所有 CharField 和 TextField 自动 HTML 转义"""
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        for field_name, value in data.items():
+            if isinstance(value, str):
+                data[field_name] = escape(value)
+        return data
+
+
+class CourseReviewSerializer(WebSafeModelSerializer):
     """
     DRF Serializer for CourseReview model to handle form data from postReview.html
     """
@@ -258,7 +271,7 @@ def get_course_data_for_frontend():
     serializer = ReviewCategoriesSerializer(courses, many=True)
     return serializer.data
 
-class CourseReviewListSerializer(serializers.ModelSerializer):
+class CourseReviewListSerializer(WebSafeModelSerializer):
     reviewer = serializers.SerializerMethodField()
     reviewer_avatar = serializers.SerializerMethodField()
     semester = serializers.SerializerMethodField()

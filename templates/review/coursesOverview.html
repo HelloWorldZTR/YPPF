@@ -9,7 +9,7 @@
       <div class="col-12 col-lg-4">
         <div class="card h-100">
           <div class="card-header">
-            <h5 class="mb-0">课程评价综述</h5>
+            <h5 class="mb-0">课程类别</h5>
           </div>
           <div class="card-body p-2">
             <!-- 分类折叠/列表 -->
@@ -173,12 +173,14 @@
               <!-- 用户评价列表 -->
               <div>
                 <div class="d-flex align-items-center justify-content-between">
-                  <h6 class="font-weight-bold mb-3">用户评价</h6>
+                  <h6 class="font-weight-bold mb-3"  id="reviews-list-header">用户评价</h6>
                   <button class="btn btn-outline-primary btn-sm mb-3" id="post-btn" onclick="postReview()">
                     <i class="fas fa-pen"></i>发表评价
                   </button>
                 </div>
+                <div class="text-muted" id="reviews-placeholder">暂无评价，快来发表吧🤗</div>
                 <div id="reviews-list">
+                  
                   <!-- 动态生成评价列表 -->
                 </div>
                 <nav aria-label="评价分页" class="mt-3">
@@ -250,9 +252,7 @@
     updateOverallScores(details.overall);
     updateSemesterScores(details.semesters);
 
-    currentPage = -1;
-    totalPages = details.total_pages;
-    initPagination(); // Initialize and load first review page
+    changePage(1);
   }
 
   function updateOverallScores(overall) {
@@ -477,119 +477,150 @@
   }
 </script>
 <script>
-  // Pagination variables
-  let currentPage = -1;
-  let totalPages = 1;
-  let reviewsPerPage = 5;
-  // Initialize pagination
-  // Excuted every time a new course is selected and when page loads
-  function initPagination() {
-    // console.log('Total Pages:', totalPages);
-    if (totalPages <= 1) {
-      document.getElementById('pagination-container').style.display = 'none';
-    }
-    else {
-      document.getElementById('pagination-container').style.display = 'flex';
-    }
-    changePage(1);
+// Pagination variables
+let currentPage = 1;
+let totalPages = -1; // Make sure this will never equal totalPage, so it will call for a initPagination
+// Initialize pagination
+function initPagination() {
+  // console.log('Total Pages:', totalPages);
+  if (totalPages <= 1) {
+    document.getElementById('pagination-container').style.display = 'none';
   }
-  function renderPagination() {
-    const container = document.getElementById('pagination-container');
-    if (!container) return;
-    container.innerHTML = '';
-    // Previous button
-    const prevLi = document.createElement('li');
-    prevLi.className = `page-item ${currentPage === 1 ? 'disabled' : ''}`;
-    prevLi.innerHTML = `<a class="page-link" href="javascript:void(0);" onclick="changePage(${currentPage - 1})">上一页</a>`;
-    container.appendChild(prevLi);
-    // Page numbers logic
-    let startPage = 1;
-    let endPage = totalPages;
-    if (totalPages > 7) {
-      if (currentPage <= 4) {
-        // Near beginning
-        startPage = 1;
-        endPage = 5;
-      } else if (currentPage >= totalPages - 3) {
-        // Near end
-        startPage = totalPages - 4;
-        endPage = totalPages;
-      } else {
-        // In middle
-        startPage = currentPage - 2;
-        endPage = currentPage + 2;
-      }
-    }
-    // First page (if not in range)
-    if (startPage > 1) {
-      const firstLi = document.createElement('li');
-      firstLi.className = 'page-item';
-      firstLi.innerHTML = `<a class="page-link" href="javascript:void(0);" onclick="changePage(1)">1</a>`;
-      container.appendChild(firstLi);
-      if (startPage > 2) {
-        const dotsLi = document.createElement('li');
-        dotsLi.className = 'page-item disabled';
-        dotsLi.innerHTML = '<span class="page-link">...</span>';
-        container.appendChild(dotsLi);
-      }
-    }
-    // Page numbers in range
-    for (let i = startPage; i <= endPage; i++) {
-      const pageLi = document.createElement('li');
-      pageLi.className = `page-item ${i === currentPage ? 'active' : ''}`;
-      pageLi.innerHTML = `<a class="page-link" href="javascript:void(0);" onclick="changePage(${i})">${i}</a>`;
-      container.appendChild(pageLi);
-    }
-    // Last page (if not in range)
-    if (endPage < totalPages) {
-      if (endPage < totalPages - 1) {
-        const dotsLi = document.createElement('li');
-        dotsLi.className = 'page-item disabled';
-        dotsLi.innerHTML = '<span class="page-link">...</span>';
-        container.appendChild(dotsLi);
-      }
-      const lastLi = document.createElement('li');
-      lastLi.className = 'page-item';
-      lastLi.innerHTML = `<a class="page-link" href="javascript:void(0);" onclick="changePage(${totalPages})">${totalPages}</a>`;
-      container.appendChild(lastLi);
-    }
-    // Next button
-    const nextLi = document.createElement('li');
-    nextLi.className = `page-item ${currentPage === totalPages ? 'disabled' : ''}`;
-    nextLi.innerHTML = `<a class="page-link" href="javascript:void(0);" onclick="changePage(${currentPage + 1})">下一页</a>`;
-    container.appendChild(nextLi);
-  }
-  function changePage(page) {
-    console.log('Changing to page:', page);
-    currentPage = page;
+  else {
+    document.getElementById('pagination-container').style.display = 'flex';
     renderPagination();
-    loadPageData(page);
   }
-  function loadPageData(page) {
-    // This is where you would load actual review data for the page
-    console.log('Loading page:', page);
-    const data = $.ajax({
-      url: "{% url 'getCourseReviews' %}",
-      method: "GET",
-      data: { id: document.querySelector('.list-select-course.active')?.dataset.courseId, page: page},
-      dataType: "json",
-      async: false
-    }).responseJSON;
-    if (data.error) {
-      console.error(data.error);
-      return;
+}
+function renderPagination() {
+  const container = document.getElementById('pagination-container');
+  if (!container) return;
+  container.innerHTML = '';
+  // Previous button
+  const prevLi = document.createElement('li');
+  prevLi.className = `page-item ${currentPage === 1 ? 'disabled' : ''}`;
+  prevLi.innerHTML = `<a class="page-link" href="javascript:void(0);" onclick="changePage(${currentPage - 1})">上一页</a>`;
+  container.appendChild(prevLi);
+  // Page numbers logic
+  let startPage = 1;
+  let endPage = totalPages;
+  if (totalPages > 7) {
+    if (currentPage <= 4) {
+      // Near beginning
+      startPage = 1;
+      endPage = 5;
+    } else if (currentPage >= totalPages - 3) {
+      // Near end
+      startPage = totalPages - 4;
+      endPage = totalPages;
+    } else {
+      // In middle
+      startPage = currentPage - 2;
+      endPage = currentPage + 2;
     }
-    console.log(data.reviews);
-    updateReviewsList(data.reviews);
   }
-  function postReview() {
-    const courseId = document.querySelector('.list-select-course.active')?.dataset.courseId;
-    if (!courseId) {
-      alert('请先选择一门课程再发表评价。');
-      return;
+  // First page (if not in range)
+  if (startPage > 1) {
+    const firstLi = document.createElement('li');
+    firstLi.className = 'page-item';
+    firstLi.innerHTML = `<a class="page-link" href="javascript:void(0);" onclick="changePage(1)">1</a>`;
+    container.appendChild(firstLi);
+    if (startPage > 2) {
+      const dotsLi = document.createElement('li');
+      dotsLi.className = 'page-item disabled';
+      dotsLi.innerHTML = '<span class="page-link">...</span>';
+      container.appendChild(dotsLi);
     }
-    window.location.href = `{% url 'postReview' %}?course_id=${courseId}`;
   }
+  // Page numbers in range
+  for (let i = startPage; i <= endPage; i++) {
+    const pageLi = document.createElement('li');
+    pageLi.className = `page-item ${i === currentPage ? 'active' : ''}`;
+    pageLi.innerHTML = `<a class="page-link" href="javascript:void(0);" onclick="changePage(${i})">${i}</a>`;
+    container.appendChild(pageLi);
+  }
+  // Last page (if not in range)
+  if (endPage < totalPages) {
+    if (endPage < totalPages - 1) {
+      const dotsLi = document.createElement('li');
+      dotsLi.className = 'page-item disabled';
+      dotsLi.innerHTML = '<span class="page-link">...</span>';
+      container.appendChild(dotsLi);
+    }
+    const lastLi = document.createElement('li');
+    lastLi.className = 'page-item';
+    lastLi.innerHTML = `<a class="page-link" href="javascript:void(0);" onclick="changePage(${totalPages})">${totalPages}</a>`;
+    container.appendChild(lastLi);
+  }
+  // Next button
+  const nextLi = document.createElement('li');
+  nextLi.className = `page-item ${currentPage === totalPages ? 'disabled' : ''}`;
+  nextLi.innerHTML = `<a class="page-link" href="javascript:void(0);" onclick="changePage(${currentPage + 1})">下一页</a>`;
+  container.appendChild(nextLi);
+}
+function changePage(page) {
+  console.log('Changing to page:', page);
+  currentPage = page;
+  loadPageData(page);
+  renderPagination();
+}
+
+function scrollToReviews() {
+  const reviewsHeader = document.querySelector('#reviews-list-header');
+
+  if (reviewsHeader) {
+    reviewsHeader.scrollIntoView({ 
+      behavior: 'smooth', 
+      block: 'start' 
+    });
+  }
+}
+
+function loadPageData(page) {
+  $.ajax({
+    url: "{% url 'getCourseReviews' %}",
+    method: "GET",
+    data: { 
+      id: document.querySelector('.list-select-course.active')?.dataset.courseId,
+      page: page
+    },
+    dataType: "json",
+    success: (data) => {
+      // Hide placeholder if we have reviews
+      document.getElementById('reviews-placeholder').style.display = 'none';
+      
+      console.log(data.reviews);
+      updateReviewsList(data.reviews);
+      scrollToReviews();
+
+      // Update pagination if total pages changed
+      if (data.totalPages !== totalPages) {
+          totalPages = data.totalPages;
+          initPagination();
+      }
+    },
+    error: (data) => { // This page no longer exists
+      if (page > 1) {
+        // Go to previous page
+        changePage(page - 1);
+        return;
+      } else {
+        // Show placeholder for empty state
+        document.getElementById('reviews-placeholder').style.display = 'block';
+        return;
+      }
+    }
+  });
+}
+
+
+function postReview() {
+  const courseId = document.querySelector('.list-select-course.active')?.dataset.courseId;
+  if (!courseId) {
+    alert('请先选择一门课程再发表评价。');
+    return;
+  }
+  window.location.href = `{% url 'postReview' %}?course_id=${courseId}`;
+}
 </script>
   <style>
     #course-eval-app .list-group-item.active {transition: background-color .15s; }
