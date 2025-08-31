@@ -1954,14 +1954,11 @@
 </script>
 
 <script>
-console.log("{{ person_id }}");
-console.log("{{ is_myself }}");
 function updateReviewsList(reviews) {
   const reviewsList = document.getElementById('my-reviews-list');
   reviewsList.innerHTML = '';
 
   reviews.forEach((review, index) => {
-    console.log(review);
     const reviewCard = document.createElement('div');
     reviewCard.className = `card mb-3 shadow-sm ${!review.visibility ? 'card-hidden' : ''}`;
     reviewCard.id = `review-card-${review.id}`;
