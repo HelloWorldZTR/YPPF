@@ -43,27 +43,7 @@ class PoolsViewSet(viewsets.ViewSet):
     permission_classes = [IsAuthenticated]
     authentication_classes = [WxJWTAuthentication]
     queryset = Pool.objects.all()
-    '''
-    def _get_filtered_pools(self, pool_type: Pool.Type):
-        """Get pools filtered by type and user eligibility."""
-        user: User = self.request.user
 
-        assert hasattr(user, 'naturalperson'), "非个人用户发起了奖池兑换请求"
-
-        pools = Pool.objects.filter(
-            Q(type=pool_type) & Q(start__lte=datetime.now())
-            & (Q(end__isnull=True) | Q(end__gte=datetime.now() - timedelta(days=1)))
-            & (Q(activity__isnull=True) | Exists(
-                Participation.objects.filter(
-                    activity=OuterRef('activity'),
-                    person=user.naturalperson,
-                    status=Participation.AttendStatus.ATTENDED,
-                )
-            ))
-        ).select_related('activity').prefetch_related('items__prize')
-
-        return pools
-    '''
 
     def _get_serialized_data(self, pool_type: Pool.Type):
         """Serialize pool data using the existing utility function."""
