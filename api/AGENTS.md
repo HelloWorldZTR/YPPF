@@ -225,16 +225,117 @@ person-versus-organization behavior. Authentication changes must additionally
 test expired or forged `signed_openid` values and ticket expiry/replay as
 applicable.
 
+## Response and Error Contract
+
+The `/api/v2/` API uses HTTP status codes as the authoritative transport
+result. Successful responses return the resource or action-specific payload
+directly; do not wrap every success in a second `{code, data, message}`
+envelope. A successful action may return a `message` when the client is meant
+to display it, and a `204 No Content` response has no body.
+
+Every error response under `/api/v2/` must use this JSON object shape:
+
+```json
+{
+  "code": "activity.checkin_not_open",
+  "message": "活动开始前一小时开放签到，请耐心等待！",
+  "errors": {}
+}
+```
+
+All three keys are required:
+
+- `code` is a stable, machine-readable string. Use lower-case dotted names
+  such as `request.validation_failed`, `authentication.required`,
+  `authentication.invalid`, `permission.denied`, `resource.not_found`,
+  `resource.conflict`, or a feature-specific value such as
+  `activity.checkin_not_open`. It is not an HTTP status and must never contain
+  a duplicate numeric value such as `400` or `401`. Do not change a published
+  code merely to reword its user-facing message.
+- `message` is a concise, safe, user-facing summary. It must not expose stack
+  traces, exception representations, credentials, internal service responses,
+  SQL, or model details. Clients may display it directly.
+- `errors` is an object containing field-level validation messages. Use `{}`
+  when there are none. Each key is a request field path and each value is a
+  non-empty list of user-facing strings. Use dotted paths such as
+  `items.0.name` for nested input and `non_field_errors` for serializer-level
+  validation that cannot be assigned to one field.
+
+For example, invalid input is returned as:
+
+```json
+{
+  "code": "request.validation_failed",
+  "message": "请求参数有误",
+  "errors": {
+    "aid": ["活动 ID 格式错误"]
+  }
+}
+```
+
+Use status codes and exception categories consistently:
+
+| Status | Meaning | View-layer source |
+| --- | --- | --- |
+| `400 Bad Request` | Malformed input, field validation failure, or an ordinary business precondition the caller can correct. | A serializer/DRF `ValidationError` for field errors, or the shared business-rule API exception for non-field failures. |
+| `401 Unauthorized` | The server cannot establish a valid identity. | Authentication classes and `NotAuthenticated`/`AuthenticationFailed`; feature code must not manufacture this response. |
+| `403 Forbidden` | Authentication succeeded but the selected account is not authorized. | A permission class or `PermissionDenied`. |
+| `404 Not Found` | The caller-scoped resource does not exist or is deliberately hidden from this caller. | A scoped lookup or `NotFound`. |
+| `409 Conflict` | A valid request conflicts with a concurrently changed or otherwise incompatible resource state. | The shared conflict API exception. Do not use it for ordinary input validation. |
+| `429 Too Many Requests` | A configured throttle rejected the request. | DRF throttling. |
+| `500 Internal Server Error` | An unexpected server failure. | The shared exception handler, with details logged server-side and a generic client message. |
+
+The shared `/api/v2/` exception handler owns translation from DRF exceptions
+to this wire format. New endpoint code must raise the appropriate exception;
+it must not hand-build error `Response` objects with `detail`, `error`, `msg`,
+`message`, a top-level list, or a feature-specific shape. In particular:
+
+- Use serializer validation or `ValidationError({"field": "message"})` only
+  for request-field errors. Never raise `ValidationError("plain string")`,
+  because DRF renders that form as a top-level list before normalization.
+- Use the shared business-rule exception for a non-field 400 failure, with a
+  stable feature code when the frontend may branch on the reason.
+- Use `PermissionDenied`, `NotFound`, and the shared conflict exception for
+  their corresponding semantics. Never use `assert` for validation,
+  authorization, resource lookup, or any client-triggerable API failure.
+- Do not catch an unexpected exception merely to return its string to the
+  client. Catch only expected domain or integration exceptions, map them to a
+  safe API error, and allow unexpected exceptions to be logged and normalized
+  as `server.internal_error`.
+
+Domain utilities must remain independent of DRF. They may raise a
+feature-local domain exception or return a typed result containing a stable
+failure code and safe message. The view maps that result to the appropriate
+API exception. Do not reduce a multi-reason domain operation to an untyped
+`(False, message)` result when callers need to choose an HTTP status or stable
+error code.
+
+Define the common error schema once and reference it from `extend_schema` for
+every documented non-2xx response. Tests must assert the HTTP status and the
+complete `code`/`message`/`errors` body, not only the status code. Add a
+contract test for each shared exception category and focused tests for every
+feature-specific code on which the client branches.
+
+Existing endpoints may temporarily retain a legacy error body only when a
+verified released client depends on it; document that compatibility exception
+beside the endpoint and do not copy it into new code. For a coordinated
+migration, first release a frontend parser that accepts both legacy errors and
+the contract above, remove page-level reads such as `error.data[0]`,
+`error.data.detail`, and `error.data.error`, then switch the backend and remove
+the frontend fallback after old clients are no longer supported.
+
 ### Why HTTP 401 and 403 must remain distinct
 
 The distinction is part of the contract with the YPPF mini-program frontend,
 not merely an HTTP style preference. In the sibling frontend repository,
 `src/store/token.ts` exposes `wxLogin()` to obtain and persist a replacement
-JWT. The response interceptor in `src/http/http.ts` interprets every HTTP or
-business-code 401 as an authentication failure: outside its login/binding
-exclusion list, it calls `tokenStore.wxLogin()` and then retries the original
-request. A 403 follows the ordinary error path and does not trigger token
-renewal.
+JWT. During the response-contract migration, the interceptor in
+`src/http/http.ts` may recognize both HTTP 401 and the historical numeric
+business-code 401. The final contract must use only HTTP 401: new backend code
+must not emit a numeric 401 in the response body's string `code` field, and
+the frontend compatibility check should be removed after old responses are no
+longer supported. A 403 follows the ordinary error path and does not trigger
+token renewal.
 
 Backend endpoints must therefore use the status codes consistently:
 
